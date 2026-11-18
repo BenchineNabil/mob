@@ -18,7 +18,7 @@ interface ExamState {
   // Actions
   startExam: (questionIds: string[], challengeIds: string[], durationSeconds?: number) => void;
   tickTimer: () => void;
-  recordAnswer: (questionId: string, answer: any, timeSpentSeconds: number) => void;
+  recordAnswer: (questionId: string, answer: any, isCorrectOrTime?: boolean | number, timeSpentSeconds?: number) => void;
   recordCodingSubmission: (challengeId: string, code: string, passed: number, total: number) => void;
   submitExam: () => ExamAttempt;
   resetExam: () => void;
@@ -66,14 +66,18 @@ export const useExamStore = create<ExamState>()(
         }
       },
 
-      recordAnswer: (questionId: string, answer: any, timeSpentSeconds: number) => {
+      recordAnswer: (questionId: string, answer: any, isCorrectOrTime?: boolean | number, timeSpentSeconds = 0) => {
+        const isCorrect = typeof isCorrectOrTime === 'boolean' ? isCorrectOrTime : undefined;
+        const time = typeof isCorrectOrTime === 'number' ? isCorrectOrTime : timeSpentSeconds;
+
         set((state) => ({
           quizAnswers: {
             ...state.quizAnswers,
             [questionId]: {
               questionId,
               userAnswer: answer,
-              timeSpentSeconds,
+              ...(isCorrect !== undefined ? { isCorrect } : {}),
+              timeSpentSeconds: time,
             },
           },
         }));

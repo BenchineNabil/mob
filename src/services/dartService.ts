@@ -119,30 +119,42 @@ function clientEvaluateChallenge(
 
     // Check specific keywords based on test description
     if (tc.description.includes('decimalToBinary') || tc.description.includes('binary')) {
-      passed = code.includes('decimalToBinary') && (code.includes('% 2') || code.includes('~/ 2') || code.includes('toRadixString'));
+      passed = (code.includes('decimalTobinary') || code.includes('decimalToBinary')) && (code.includes('% 2') || code.includes('~/ 2') || code.includes('toRadixString') || code.includes('remainder'));
     } else if (tc.description.includes('filterEvens')) {
       passed = code.includes('.where(') || code.includes('% 2 == 0');
     } else if (tc.description.includes('safeIntegerDivision') || tc.description.includes('~/')) {
       passed = code.includes('~/') || code.includes('~/ b');
     } else if (tc.description.includes('isPalindrome')) {
-      passed = code.includes('isPalindrome') && (code.includes('reversed') || code.includes('clean'));
+      passed = code.includes('isPalindrome') && (code.includes('reversed') || code.includes('clean') || code.includes('length') || code.includes('split'));
     } else if (tc.description.includes('hasConsecutiveZeros') || tc.description.includes('zeros')) {
       passed = code.includes('"00"') || code.includes("'00'");
-    } else if (tc.description.includes('Phrase') || tc.description.includes('capitalized')) {
-      passed = code.includes('class Phrase') && code.includes('get capitalized') && code.includes('_text');
-    } else if (tc.description.includes('CounterStore') || tc.description.includes('identical')) {
-      passed = code.includes('CounterStore._internal') && code.includes('factory CounterStore');
+    } else if (tc.description.includes('Phrase') || tc.description.includes('capitalized') || tc.description.includes('vowel')) {
+      passed = code.includes('class Phrase') && (code.includes('get capitalized') || code.includes('get vowelCount') || code.includes('get isPalindrome')) && !code.includes('return "";');
+    } else if (tc.description.includes('CounterStore') || tc.description.includes('identical') || tc.description.includes('synchronized')) {
+      passed = (code.includes('CounterStore._internal') || code.includes('CounterStore._')) && code.includes('factory CounterStore');
+    } else if (tc.description.includes('Vector3D') || tc.description.includes('magnitude') || tc.description.includes('dot')) {
+      passed = code.includes('class Vector3D') && (code.includes('operator +') || code.includes('dot') || code.includes('magnitude')) && !code.includes('double get magnitude => 0.0');
+    } else if (tc.description.includes('AuthRepository') || tc.description.includes('AuthException') || tc.description.includes('logout clears token')) {
+      passed = (code.includes('MockAuthRepository') || code.includes('AuthRepository')) && (code.includes('AuthException') || code.includes('login') || code.includes('logout')) && !code.includes('throw UnimplementedError()');
+    } else if (tc.description.includes('TicTacToe') || tc.description.includes('makeMove') || tc.description.includes('win')) {
+      passed = code.includes('makeMove') && code.includes('checkWinner') && !code.includes('return false;\n  }\n\n  String? checkWinner() {\n    // TODO');
+    } else if (tc.description.includes('LRUCache') || tc.description.includes('evict')) {
+      passed = code.includes('class LRUCache') && code.includes('put') && code.includes('get') && !code.includes('return null;\n  }');
+    } else if (tc.description.includes('filterAndTransformStream') || tc.description.includes('retryOperation')) {
+      passed = (code.includes('filterAndTransformStream') || code.includes('retryOperation')) && !code.includes('throw UnimplementedError()');
+    } else if (tc.description.includes('HistoryStore') || tc.description.includes('undo') || tc.description.includes('redo')) {
+      passed = code.includes('class HistoryStore') && code.includes('undo()') && code.includes('redo()') && !code.includes('return _current;\n  }');
+    } else if (tc.description.includes('MathUtils') || tc.description.includes('isPrime') || tc.description.includes('sieve') || tc.description.includes('gcd')) {
+      passed = code.includes('MathUtils') && (code.includes('isPrime') || code.includes('sieveOfEratosthenes') || code.includes('gcd'));
+    } else if (tc.description.includes('CustomStack') || tc.description.includes('LIFO') || tc.description.includes('peek') || tc.description.includes('pop')) {
+      passed = code.includes('CustomStack') && (code.includes('push') || code.includes('pop') || code.includes('peek'));
     } else if (tc.description.includes('Expanded') || tc.description.includes('Cart')) {
       passed = code.includes('Expanded') || code.includes('buildCartItemLayout');
-    } else if (tc.description.includes('TicTacToe') || tc.description.includes('win')) {
-      passed = code.includes('makeMove') && code.includes('checkWinner');
-    } else if (tc.description.includes('validateUsername') || tc.description.includes('Auth')) {
-      passed = code.includes('validateUsername') && code.includes('validatePin');
     } else if (tc.description.includes('Future') || tc.description.includes('initState')) {
       passed = code.includes('isFutureCachedInInitState') || code.includes('evaluateSnapshot');
     } else {
       // General check: code must be implemented and not empty
-      passed = code.trim().length > 80 && !code.includes('// TODO: Implement');
+      passed = code.trim().length > 60 && !code.includes('// TODO: Implement') && !code.includes('throw UnimplementedError()');
     }
 
     return {

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useExamStore } from '../store/examStore';
-import { getRandomExamQuestions } from '../data/questions';
+import { getRandomExamQuestions, ALL_QUESTIONS } from '../data/questions';
 import { MonacoCodeEditor } from '../components/code/MonacoCodeEditor';
+import { ALL_CODING_CHALLENGES } from '../data/codingChallenges';
 import { sound } from '../utils/soundEffects';
 import confetti from 'canvas-confetti';
 import { 
@@ -11,12 +12,16 @@ import {
   XCircle, 
   AlertTriangle, 
   ChevronRight, 
+  ChevronLeft,
   Send, 
   RotateCcw,
   ShieldAlert,
   Trophy,
   FileText,
-  Code2
+  Code2,
+  PenTool,
+  Sparkles,
+  HelpCircle
 } from 'lucide-react';
 
 export const ExamView: React.FC = () => {
@@ -38,44 +43,15 @@ export const ExamView: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'quiz' | 'coding'>('quiz');
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [activeChallengeIndex, setActiveChallengeIndex] = useState(0);
+  const [isExamScratchMode, setIsExamScratchMode] = useState<boolean>(false);
 
-  // Coding challenge for the exam (LAB-01 + LAB-03 + LAB-04)
+  // 4 Extensive Practical Coding Challenges for the Final Exam
   const examCodingChallenges = [
-    {
-      id: 'exam-c1',
-      title: 'Practical Coding Part 1: Palindrome & Binary Converter',
-      description: 'Implement isPalindrome(String s) and decimalTobinary(int n) satisfying all test cases.',
-      starterCode: `bool isPalindrome(String s) {
-  // TODO: Case-insensitive palindrome check
-  return false;
-}
-
-String decimalTobinary(int n) {
-  // TODO: Convert decimal integer to binary string
-  return "";
-}
-`,
-      testCases: [
-        { id: 't1', description: 'isPalindrome("radar") returns true', expectedOutput: true },
-        { id: 't2', description: 'isPalindrome("flutter") returns false', expectedOutput: false },
-        { id: 't3', description: 'decimalTobinary(10) returns "1010"', expectedOutput: '1010' },
-      ],
-    },
-    {
-      id: 'exam-c2',
-      title: 'Practical Coding Part 2: Singleton CounterStore',
-      description: 'Implement CounterStore with private constructor, static _instance, and factory constructor.',
-      starterCode: `class CounterStore {
-  // TODO: Implement Singleton pattern
-  int count = 0;
-  void increment() => count++;
-}
-`,
-      testCases: [
-        { id: 't1', description: 'CounterStore() returns identical instance', expectedOutput: true },
-      ],
-    },
+    ALL_CODING_CHALLENGES.find((c) => c.id === 'chal-algo-1') || ALL_CODING_CHALLENGES[0],
+    ALL_CODING_CHALLENGES.find((c) => c.id === 'chal-pat-1') || ALL_CODING_CHALLENGES[2],
+    ALL_CODING_CHALLENGES.find((c) => c.id === 'chal-pat-2') || ALL_CODING_CHALLENGES[4],
+    ALL_CODING_CHALLENGES.find((c) => c.id === 'chal-game-1') || ALL_CODING_CHALLENGES[5],
   ];
 
   // Tick timer every second when active
@@ -97,7 +73,7 @@ String decimalTobinary(int n) {
       90 * 60 // 90 minutes
     );
     setCurrentQuizIndex(0);
-    setSelectedOption(null);
+    setActiveChallengeIndex(0);
     sound.playClick();
   };
 
@@ -106,6 +82,11 @@ String decimalTobinary(int n) {
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+
+  // Find the active question from ALL_QUESTIONS
+  const currentQuestionId = selectedQuestionIds[currentQuizIndex];
+  const currentQuestion = ALL_QUESTIONS.find((q) => q.id === currentQuestionId) || ALL_QUESTIONS[0];
+  const selectedOptionForCurrent = quizAnswers[currentQuestion?.id]?.userAnswer ?? null;
 
   // Exam Results View
   if (isCompleted && currentExamResult) {
@@ -194,7 +175,9 @@ String decimalTobinary(int n) {
           <ul className="text-xs text-gray-300 space-y-2 list-disc list-inside">
             <li><strong>Duration:</strong> Exactly 90 minutes with live countdown.</li>
             <li><strong>Weighting:</strong> 45% Quiz Questions, 55% Practical Coding Tasks.</li>
-            <li><strong>No LLMs or Cheat Sheets:</strong> Hints and lesson previews are locked during the exam.</li>
+            <li><strong>Quiz Questions:</strong> 20 rigorous conceptual and output prediction questions.</li>
+            <li><strong>Practical Coding:</strong> 4 comprehensive coding challenges (Algorithms, OOP Singleton, Auth Architecture, and Game Engine).</li>
+            <li><strong>Code From Zero:</strong> You can toggle between scaffolded starters and full scratch mode.</li>
             <li><strong>Auto-Submit:</strong> When the timer expires, all current answers are automatically finalized.</li>
             <li><strong>Passing Threshold:</strong> A composite score of <strong>70%</strong> is required to pass.</li>
           </ul>
@@ -210,6 +193,9 @@ String decimalTobinary(int n) {
       </div>
     );
   }
+
+  const answeredQuizCount = Object.keys(quizAnswers).length;
+  const activeCodingChal = examCodingChallenges[activeChallengeIndex];
 
   // Active Exam Hall View
   return (
@@ -249,121 +235,257 @@ String decimalTobinary(int n) {
       </div>
 
       {/* Tabs: Quiz vs Practical Coding */}
-      <div className="flex items-center gap-3 border-b border-quest-border/50 pb-2">
-        <button
-          onClick={() => setActiveTab('quiz')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition ${
-            activeTab === 'quiz'
-              ? 'bg-quest-primary text-white shadow-lg shadow-quest-primary/20'
-              : 'text-quest-muted hover:text-white hover:bg-quest-card'
-          }`}
-        >
-          <FileText className="w-4 h-4" />
-          <span>Section 1: Quiz Questions ({selectedQuestionIds.length})</span>
-        </button>
+      <div className="flex items-center justify-between border-b border-quest-border/50 pb-2">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              setActiveTab('quiz');
+              sound.playClick();
+            }}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition ${
+              activeTab === 'quiz'
+                ? 'bg-quest-primary text-white shadow-lg shadow-quest-primary/20'
+                : 'text-quest-muted hover:text-white hover:bg-quest-card'
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            <span>Section 1: Quiz ({answeredQuizCount}/{selectedQuestionIds.length})</span>
+          </button>
 
-        <button
-          onClick={() => setActiveTab('coding')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition ${
-            activeTab === 'coding'
-              ? 'bg-quest-primary text-white shadow-lg shadow-quest-primary/20'
-              : 'text-quest-muted hover:text-white hover:bg-quest-card'
-          }`}
-        >
-          <Code2 className="w-4 h-4" />
-          <span>Section 2: Practical Coding ({examCodingChallenges.length})</span>
-        </button>
+          <button
+            onClick={() => {
+              setActiveTab('coding');
+              sound.playClick();
+            }}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition ${
+              activeTab === 'coding'
+                ? 'bg-quest-primary text-white shadow-lg shadow-quest-primary/20'
+                : 'text-quest-muted hover:text-white hover:bg-quest-card'
+            }`}
+          >
+            <Code2 className="w-4 h-4" />
+            <span>Section 2: Practical Coding ({examCodingChallenges.length} Tasks)</span>
+          </button>
+        </div>
+
+        {/* Zero Scratch Mode toggle for coding section */}
+        {activeTab === 'coding' && (
+          <div className="flex items-center gap-2 glass-card px-3 py-1.5 rounded-xl border border-quest-border/40">
+            <PenTool className="w-3.5 h-3.5 text-quest-accent" />
+            <span className="text-[11px] font-bold text-white">Code From Zero:</span>
+            <button
+              onClick={() => {
+                setIsExamScratchMode(!isExamScratchMode);
+                sound.playClick();
+              }}
+              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                isExamScratchMode ? 'bg-quest-accent' : 'bg-quest-card border border-quest-border'
+              }`}
+            >
+              <span
+                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                  isExamScratchMode ? 'translate-x-4' : 'translate-x-0.5'
+                }`}
+              />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Tab 1: Quiz Section */}
-      {activeTab === 'quiz' && (
-        <div className="glass-panel p-6 lg:p-8 rounded-3xl border border-quest-border/60 space-y-6">
-          <div className="flex items-center justify-between text-xs text-quest-muted font-mono">
-            <span>Question {currentQuizIndex + 1} of {selectedQuestionIds.length}</span>
-            <span>Weight: 45% of Final Grade</span>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-base font-bold text-white">
-              Which statement accurately reflects the behavior of Dart\'s Integer Division operator (~/)?
-            </h3>
-
-            <div className="space-y-2.5">
-              {[
-                'It truncates fractional parts and always returns an integer.',
-                'It returns a double like standard division.',
-                'It rounds to the nearest floating point number.',
-                'It throws an exception if the result is negative.'
-              ].map((opt, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    setSelectedOption(i);
-                    recordAnswer(selectedQuestionIds[currentQuizIndex] || `q-${currentQuizIndex}`, i, 20);
-                    sound.playClick();
-                  }}
-                  className={`w-full text-left p-4 rounded-2xl border text-xs sm:text-sm transition flex items-center gap-3 ${
-                    selectedOption === i
-                      ? 'bg-quest-primary/20 border-quest-primary text-white font-semibold'
-                      : 'bg-quest-card/40 border-quest-border/60 hover:bg-quest-border/60 text-gray-200'
-                  }`}
-                >
-                  <span className="w-6 h-6 rounded-full bg-quest-surface flex items-center justify-center font-bold text-xs">
-                    {String.fromCharCode(65 + i)}
-                  </span>
-                  <span>{opt}</span>
-                </button>
-              ))}
+      {activeTab === 'quiz' && currentQuestion && (
+        <div className="space-y-4">
+          
+          {/* Question Navigation Matrix (Pills 1..20) */}
+          <div className="glass-panel p-3.5 rounded-2xl border border-quest-border/60">
+            <div className="text-[11px] text-quest-muted mb-2 font-mono flex items-center justify-between">
+              <span>Question Navigator:</span>
+              <span>{answeredQuizCount} of {selectedQuestionIds.length} answered</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {selectedQuestionIds.map((qId, idx) => {
+                const isCurrent = idx === currentQuizIndex;
+                const isAnswered = quizAnswers[qId] !== undefined;
+                return (
+                  <button
+                    key={qId}
+                    onClick={() => {
+                      setCurrentQuizIndex(idx);
+                      sound.playClick();
+                    }}
+                    className={`w-8 h-8 rounded-xl text-xs font-bold transition flex items-center justify-center ${
+                      isCurrent
+                        ? 'bg-quest-primary text-white ring-2 ring-quest-accent shadow-lg shadow-quest-primary/30'
+                        : isAnswered
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                        : 'bg-quest-card text-quest-muted hover:text-white border border-quest-border/40'
+                    }`}
+                  >
+                    {idx + 1}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Quiz Navigation */}
-          <div className="flex items-center justify-between pt-4 border-t border-quest-border/40">
-            <button
-              onClick={() => {
-                if (currentQuizIndex > 0) {
-                  setCurrentQuizIndex((i) => i - 1);
-                  sound.playClick();
-                }
-              }}
-              disabled={currentQuizIndex === 0}
-              className="px-4 py-2 rounded-xl text-xs font-semibold glass-card text-white disabled:opacity-40"
-            >
-              Previous
-            </button>
+          {/* Current Question Card */}
+          <div className="glass-panel p-6 lg:p-8 rounded-3xl border border-quest-border/60 space-y-6">
+            <div className="flex items-center justify-between text-xs text-quest-muted font-mono">
+              <span className="px-2.5 py-1 rounded-full bg-quest-surface text-quest-primary font-bold">
+                Question {currentQuizIndex + 1} of {selectedQuestionIds.length}
+              </span>
+              <span className="text-quest-muted">Topic: {currentQuestion.topic}</span>
+            </div>
 
-            <button
-              onClick={() => {
-                if (currentQuizIndex < selectedQuestionIds.length - 1) {
-                  setCurrentQuizIndex((i) => i + 1);
-                  sound.playClick();
-                }
-              }}
-              disabled={currentQuizIndex === selectedQuestionIds.length - 1}
-              className="px-5 py-2 rounded-xl text-xs font-bold bg-quest-primary text-white disabled:opacity-40"
-            >
-              Next Question
-            </button>
+            <div className="space-y-4">
+              <h3 className="text-base sm:text-lg font-bold text-white leading-relaxed">
+                {currentQuestion.prompt}
+              </h3>
+
+              {/* Code snippet if present */}
+              {currentQuestion.codeSnippet && (
+                <div className="p-4 rounded-2xl bg-quest-bg border border-quest-border/60 font-mono text-xs sm:text-sm text-quest-accent overflow-x-auto whitespace-pre">
+                  {currentQuestion.codeSnippet}
+                </div>
+              )}
+
+              {/* Answer options */}
+              <div className="space-y-3">
+                {(currentQuestion.options || []).map((opt, i) => {
+                  const isSelected = selectedOptionForCurrent === i;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        const isCorrect = i === currentQuestion.correctAnswer;
+                        recordAnswer(currentQuestion.id, i, isCorrect, 0);
+                        sound.playClick();
+                      }}
+                      className={`w-full text-left p-4 rounded-2xl border text-xs sm:text-sm transition flex items-center gap-3.5 ${
+                        isSelected
+                          ? 'bg-quest-primary/20 border-quest-primary text-white font-semibold ring-1 ring-quest-primary'
+                          : 'bg-quest-card/50 border-quest-border/60 hover:bg-quest-border/60 text-gray-200'
+                      }`}
+                    >
+                      <span className={`w-7 h-7 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
+                        isSelected ? 'bg-quest-primary text-white' : 'bg-quest-surface text-quest-muted'
+                      }`}>
+                        {String.fromCharCode(65 + i)}
+                      </span>
+                      <span className="leading-relaxed">{opt}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Quiz Navigation Bottom Bar */}
+            <div className="flex items-center justify-between pt-4 border-t border-quest-border/40">
+              <button
+                onClick={() => {
+                  if (currentQuizIndex > 0) {
+                    setCurrentQuizIndex((i) => i - 1);
+                    sound.playClick();
+                  }
+                }}
+                disabled={currentQuizIndex === 0}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold glass-card text-white hover:bg-quest-card disabled:opacity-30 disabled:pointer-events-none transition"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>Previous Question</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  if (currentQuizIndex < selectedQuestionIds.length - 1) {
+                    setCurrentQuizIndex((i) => i + 1);
+                    sound.playClick();
+                  }
+                }}
+                disabled={currentQuizIndex === selectedQuestionIds.length - 1}
+                className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold bg-quest-primary hover:bg-quest-secondary text-white disabled:opacity-30 disabled:pointer-events-none transition shadow-lg shadow-quest-primary/20"
+              >
+                <span>Next Question</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* Tab 2: Practical Coding Section */}
-      {activeTab === 'coding' && (
+      {activeTab === 'coding' && activeCodingChal && (
         <div className="space-y-6">
-          {examCodingChallenges.map((chal) => (
-            <div key={chal.id} className="h-[540px]">
-              <MonacoCodeEditor
-                initialCode={chal.starterCode}
-                testCases={chal.testCases}
-                title={chal.title}
-                subtitle={chal.description}
-                onSuccess={() => {
-                  recordCodingSubmission(chal.id, chal.starterCode, chal.testCases.length, chal.testCases.length);
-                }}
-              />
+          
+          {/* Coding Challenge Selector Tabs */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {examCodingChallenges.map((chal, idx) => {
+              const isSelected = idx === activeChallengeIndex;
+              const sub = codingSubmissions[chal.id];
+              const isDone = sub?.isCompleted;
+
+              return (
+                <button
+                  key={chal.id}
+                  onClick={() => {
+                    setActiveChallengeIndex(idx);
+                    sound.playClick();
+                  }}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition ${
+                    isSelected
+                      ? 'bg-quest-primary text-white shadow-md'
+                      : isDone
+                      ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30'
+                      : 'glass-card text-quest-muted hover:text-white'
+                  }`}
+                >
+                  {isDone ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Code2 className="w-3.5 h-3.5" />}
+                  <span>Part {idx + 1}: {chal.title.split(':')[0]}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Active Coding Challenge Specs */}
+          <div className="glass-panel p-4 rounded-2xl border border-quest-border/60 space-y-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-quest-primary" />
+                {activeCodingChal.title}
+              </h3>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-quest-surface text-quest-primary font-mono">
+                {activeCodingChal.difficulty}
+              </span>
             </div>
-          ))}
+            <p className="text-xs text-quest-muted">{activeCodingChal.description}</p>
+            {activeCodingChal.instructions.length > 0 && (
+              <ul className="text-xs text-gray-300 space-y-1 list-disc list-inside pt-1">
+                {activeCodingChal.instructions.map((inst, i) => (
+                  <li key={i}>{inst}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Monaco Code Editor */}
+          <div className="h-[600px]">
+            <MonacoCodeEditor
+              key={`${activeCodingChal.id}-${isExamScratchMode ? 'zero' : 'scaffold'}`}
+              initialCode={isExamScratchMode ? activeCodingChal.zeroScratchCode : activeCodingChal.starterCode}
+              testCases={activeCodingChal.testCases}
+              title={`${activeCodingChal.title} ${isExamScratchMode ? '(From Zero)' : ''}`}
+              subtitle={activeCodingChal.description}
+              onSuccess={() => {
+                recordCodingSubmission(
+                  activeCodingChal.id,
+                  activeCodingChal.starterCode,
+                  activeCodingChal.testCases.length,
+                  activeCodingChal.testCases.length
+                );
+              }}
+            />
+          </div>
+
         </div>
       )}
 

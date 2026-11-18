@@ -1,123 +1,57 @@
 import React, { useState } from 'react';
 import { MonacoCodeEditor } from '../components/code/MonacoCodeEditor';
+import { ALL_CODING_CHALLENGES, CodingChallenge } from '../data/codingChallenges';
 import { sound } from '../utils/soundEffects';
-import { Code2, Terminal, BookOpen, CheckCircle2, ChevronRight } from 'lucide-react';
-
-interface ChallengeItem {
-  id: string;
-  title: string;
-  level: string;
-  description: string;
-  starterCode: string;
-  testCases: { id: string; description: string; expectedOutput: any }[];
-}
-
-const ARENA_CHALLENGES: ChallengeItem[] = [
-  {
-    id: 'chal-1',
-    title: 'LAB-01: Palindrome & Binary Converter',
-    level: 'Level 1-2',
-    description: 'Implement isPalindrome(String input) and decimalTobinary(int n) in pure Dart.',
-    starterCode: `// LAB-01: Implement the functions below
-bool isPalindrome(String input) {
-  // TODO: Case-insensitive palindrome check
-  return false;
-}
-
-String decimalTobinary(int input) {
-  // TODO: Convert decimal integer to binary string
-  return "";
-}
-
-void main() {
-  print("isPalindrome('radar'): \${isPalindrome('radar')}");
-  print("decimalTobinary(10): \${decimalTobinary(10)}");
-}
-`,
-    testCases: [
-      { id: 't1', description: 'isPalindrome("radar") returns true', expectedOutput: true },
-      { id: 't2', description: 'isPalindrome("hello") returns false', expectedOutput: false },
-      { id: 't3', description: 'decimalTobinary(10) returns "1010"', expectedOutput: '1010' },
-      { id: 't4', description: 'decimalTobinary(0) returns "0"', expectedOutput: '0' },
-    ],
-  },
-  {
-    id: 'chal-2',
-    title: 'LAB-03: Phrase Class Encapsulation',
-    level: 'Level 3',
-    description: 'Implement Phrase class with private field _text, getters text, isPalindrome, and capitalized.',
-    starterCode: `class Phrase {
-  final String _text;
-  Phrase(this._text);
-  Phrase.empty() : _text = "";
-
-  String get text => _text;
-  
-  // TODO: Getter isPalindrome
-  bool get isPalindrome => false;
-
-  // TODO: Getter capitalized
-  String get capitalized => "";
-
-  @override
-  String toString() => _text;
-}
-
-void main() {
-  var p = Phrase("radar");
-  print("\${p.text}: isPalindrome=\${p.isPalindrome}");
-}
-`,
-    testCases: [
-      { id: 't1', description: 'Phrase("level").isPalindrome returns true', expectedOutput: true },
-      { id: 't2', description: 'Phrase("dart").capitalized returns "Dart"', expectedOutput: 'Dart' },
-    ],
-  },
-  {
-    id: 'chal-3',
-    title: 'LAB-04: CounterStore Singleton Pattern',
-    level: 'Level 4',
-    description: 'Implement a thread-safe Singleton CounterStore with private constructor and factory constructor.',
-    starterCode: `class CounterStore {
-  // TODO: Implement static _instance, private constructor, and factory constructor
-  int count = 0;
-  void increment() => count++;
-}
-
-void main() {
-  var s1 = CounterStore();
-  var s2 = CounterStore();
-  s1.increment();
-  print("s1: \${s1.count}, s2: \${s2.count}, identical: \${identical(s1, s2)}");
-}
-`,
-    testCases: [
-      { id: 't1', description: 'CounterStore() returns identical instance', expectedOutput: true },
-      { id: 't2', description: 'State increment is synchronized', expectedOutput: 1 },
-    ],
-  },
-  {
-    id: 'chal-4',
-    title: 'Freeform Dart Playground',
-    level: 'Sandbox',
-    description: 'Freeform scratchpad to test arbitrary Dart 3 code, async loops, event loops, and algorithms.',
-    starterCode: `import 'dart:async';
-
-void main() async {
-  print("Hello ENSIA Mobile Developers!");
-  
-  // Test Event Loop queue priority:
-  scheduleMicrotask(() => print("Microtask executed!"));
-  Future(() => print("Event queue future executed!"));
-  print("Synchronous main finished.");
-}
-`,
-    testCases: [],
-  },
-];
+import { 
+  Code2, 
+  Terminal, 
+  Sparkles, 
+  Zap, 
+  Flame, 
+  Filter, 
+  Layers, 
+  Cpu, 
+  PenTool, 
+  CheckCircle2, 
+  BookOpen,
+  HelpCircle
+} from 'lucide-react';
 
 export const CodingArenaView: React.FC = () => {
-  const [selectedChallenge, setSelectedChallenge] = useState<ChallengeItem>(ARENA_CHALLENGES[0]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedChallenge, setSelectedChallenge] = useState<CodingChallenge>(ALL_CODING_CHALLENGES[0]);
+  const [isScratchMode, setIsScratchMode] = useState<boolean>(false);
+  const [showInstructions, setShowInstructions] = useState<boolean>(true);
+
+  const categories = [
+    { id: 'all', label: 'All Challenges', icon: Layers },
+    { id: 'scratch', label: 'Code From Zero 🔥', icon: PenTool },
+    { id: 'foundations', label: 'Foundations', icon: Cpu },
+    { id: 'oop', label: 'OOP & Math', icon: Code2 },
+    { id: 'patterns', label: 'Design Patterns', icon: Sparkles },
+    { id: 'advanced', label: 'Advanced State & Engine', icon: Flame },
+    { id: 'sandbox', label: 'Free Scratchpad', icon: Terminal },
+  ];
+
+  const filteredChallenges = ALL_CODING_CHALLENGES.filter((c) => {
+    if (selectedCategory === 'all') return true;
+    return c.category === selectedCategory;
+  });
+
+  const getDifficultyColor = (diff: string) => {
+    switch (diff) {
+      case 'Beginner':
+        return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
+      case 'Intermediate':
+        return 'text-sky-400 bg-sky-500/10 border-sky-500/30';
+      case 'Advanced':
+        return 'text-amber-400 bg-amber-500/10 border-amber-500/30';
+      case 'Hard':
+        return 'text-rose-400 bg-rose-500/10 border-rose-500/30';
+      default:
+        return 'text-quest-muted bg-quest-card border-quest-border';
+    }
+  };
 
   return (
     <div className="space-y-6 animate-fadeIn pb-16">
@@ -127,24 +61,76 @@ export const CodingArenaView: React.FC = () => {
         <div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
             <Code2 className="w-8 h-8 text-quest-primary" />
-            <span>Dart Coding Arena</span>
+            <span>Dart Coding Arena & Zero Lab</span>
           </h1>
           <p className="text-sm text-quest-muted mt-1">
-            Write, compile, and execute Dart code in real-time. Practice authentic laboratory assignments with instant automated test feedback.
+            Write, compile, and execute pure Dart 3 code with real-time test feedback. Challenge yourself with long enterprise tasks or code completely from zero.
           </p>
+        </div>
+
+        {/* Global Scratch Mode Toggle */}
+        <div className="flex items-center gap-3 glass-card px-4 py-2 rounded-2xl border border-quest-border/60">
+          <div className="flex items-center gap-2">
+            <PenTool className="w-4 h-4 text-quest-accent" />
+            <span className="text-xs font-bold text-white">Code From Zero Mode:</span>
+          </div>
+          <button
+            onClick={() => {
+              setIsScratchMode(!isScratchMode);
+              sound.playClick();
+            }}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+              isScratchMode ? 'bg-quest-accent' : 'bg-quest-card border border-quest-border'
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                isScratchMode ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
         </div>
       </div>
 
-      {/* Main Grid: Challenge Selector Sidebar + Monaco Editor */}
+      {/* Category Filter Pills */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {categories.map((cat) => {
+          const Icon = cat.icon;
+          const isActive = selectedCategory === cat.id;
+          return (
+            <button
+              key={cat.id}
+              onClick={() => {
+                setSelectedCategory(cat.id);
+                sound.playClick();
+                // Select first challenge in this category if current doesn't match
+                const match = ALL_CODING_CHALLENGES.find((c) => cat.id === 'all' || c.category === cat.id);
+                if (match) setSelectedChallenge(match);
+              }}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+                isActive
+                  ? 'bg-quest-primary text-white shadow-lg shadow-quest-primary/20'
+                  : 'glass-card text-quest-muted hover:text-white hover:bg-quest-border/50'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              <span>{cat.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Main Grid: Challenge Selector (1 col) + Monaco Editor (3 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         
         {/* Left: Challenge Selector List */}
-        <div className="glass-panel p-4 rounded-3xl border border-quest-border/60 space-y-2 h-fit">
-          <div className="text-xs font-bold uppercase tracking-wider text-quest-muted px-2 py-1">
-            Lab Challenges
+        <div className="glass-panel p-4 rounded-3xl border border-quest-border/60 space-y-2 h-[720px] overflow-y-auto">
+          <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-quest-muted px-2 py-1">
+            <span>Challenges ({filteredChallenges.length})</span>
+            {isScratchMode && <span className="text-amber-400 text-[10px]">Zero Scaffold</span>}
           </div>
 
-          {ARENA_CHALLENGES.map((chal) => {
+          {filteredChallenges.map((chal) => {
             const isSelected = chal.id === selectedChallenge.id;
             return (
               <button
@@ -159,29 +145,84 @@ export const CodingArenaView: React.FC = () => {
                     : 'glass-card border-quest-border/40 text-quest-muted hover:text-white hover:bg-quest-border/60'
                 }`}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-bold text-white">{chal.title}</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-quest-surface text-quest-primary font-mono">
-                    {chal.level}
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="font-bold text-white line-clamp-1">{chal.title}</span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full border font-mono ${getDifficultyColor(chal.difficulty)}`}>
+                    {chal.difficulty}
                   </span>
                 </div>
                 <p className="text-[11px] text-quest-muted line-clamp-2">
                   {chal.description}
                 </p>
+                <div className="mt-2 flex items-center gap-2 text-[10px] text-quest-primary font-mono">
+                  <span>{chal.testCases.length} unit tests</span>
+                </div>
               </button>
             );
           })}
         </div>
 
-        {/* Right: Monaco Editor Arena (3 cols) */}
-        <div className="lg:col-span-3 h-[680px]">
-          <MonacoCodeEditor
-            key={selectedChallenge.id}
-            initialCode={selectedChallenge.starterCode}
-            testCases={selectedChallenge.testCases}
-            title={selectedChallenge.title}
-            subtitle={selectedChallenge.description}
-          />
+        {/* Right: Monaco Editor Arena & Instructions */}
+        <div className="lg:col-span-3 space-y-4">
+          
+          {/* Challenge Requirements Header Banner */}
+          <div className="glass-panel p-4 rounded-2xl border border-quest-border/60 flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className={`text-xs px-2.5 py-0.5 rounded-full border font-mono font-bold ${getDifficultyColor(selectedChallenge.difficulty)}`}>
+                  {selectedChallenge.difficulty}
+                </span>
+                <span className="text-xs text-quest-muted uppercase tracking-wider font-mono">
+                  Category: {selectedChallenge.category}
+                </span>
+                {isScratchMode && (
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">
+                    Code From Zero Active
+                  </span>
+                )}
+              </div>
+              <h2 className="text-lg font-bold text-white">{selectedChallenge.title}</h2>
+              <p className="text-xs text-quest-muted">{selectedChallenge.description}</p>
+            </div>
+
+            <button
+              onClick={() => setShowInstructions(!showInstructions)}
+              className="px-3 py-1.5 rounded-xl glass-card text-xs text-quest-muted hover:text-white transition flex items-center gap-1.5 whitespace-nowrap"
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span>{showInstructions ? 'Hide Specs' : 'View Specs'}</span>
+            </button>
+          </div>
+
+          {/* Collapsible Requirements Checklist */}
+          {showInstructions && selectedChallenge.instructions.length > 0 && (
+            <div className="glass-panel p-4 rounded-2xl border border-quest-border/50 bg-quest-card/30 space-y-2">
+              <div className="text-xs font-bold uppercase tracking-wider text-quest-primary flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>Technical Requirements & Assertions</span>
+              </div>
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-300">
+                {selectedChallenge.instructions.map((inst, i) => (
+                  <li key={i} className="flex items-start gap-2 bg-quest-surface/40 p-2 rounded-xl border border-quest-border/30">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-quest-primary shrink-0 mt-0.5" />
+                    <span>{inst}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Monaco Editor Component */}
+          <div className="h-[620px]">
+            <MonacoCodeEditor
+              key={`${selectedChallenge.id}-${isScratchMode ? 'zero' : 'scaffold'}`}
+              initialCode={isScratchMode ? selectedChallenge.zeroScratchCode : selectedChallenge.starterCode}
+              testCases={selectedChallenge.testCases}
+              title={`${selectedChallenge.title} ${isScratchMode ? '(From Zero)' : ''}`}
+              subtitle={selectedChallenge.description}
+            />
+          </div>
+
         </div>
 
       </div>

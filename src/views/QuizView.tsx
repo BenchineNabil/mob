@@ -23,7 +23,7 @@ export const QuizView: React.FC = () => {
   const navigate = useNavigate();
   const levelId = parseInt(id || '1', 10);
   
-  const { canTakeQuiz, recordQuizScore, recordQuestionResult, deductHeart, stats } = useProgressionStore();
+  const { canTakeQuiz, recordQuizScore, recordQuestionResult, stats } = useProgressionStore();
   const level = LEVELS.find((l) => l.id === levelId);
   const questions = getQuestionsForLevel(levelId);
 
@@ -80,7 +80,6 @@ export const QuizView: React.FC = () => {
       setScore((s) => s + 1);
       sound.playSuccess();
     } else {
-      deductHeart();
       sound.playError();
     }
 

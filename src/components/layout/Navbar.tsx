@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { useProgressionStore } from '../../store/progressionStore';
 import { sound } from '../../utils/soundEffects';
 import { 
-  Heart, 
   Zap, 
   Flame, 
   Volume2, 
@@ -66,15 +65,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen }
 
         {/* Center: Live Stats HUD */}
         <div className="hidden md:flex items-center gap-6 glass-card px-4 py-1.5 rounded-full border border-quest-border/50">
-          
-          {/* Hearts */}
-          <div className="flex items-center gap-1.5 text-rose-400 font-semibold text-sm" title="Hearts remaining">
-            <Heart className="w-4 h-4 fill-rose-500 text-rose-500 animate-pulse" />
-            <span>{stats.hearts} / {stats.maxHearts}</span>
-          </div>
-
-          <div className="w-px h-4 bg-quest-border/60" />
-
           {/* XP */}
           <div className="flex items-center gap-1.5 text-amber-400 font-semibold text-sm" title="Total Experience Points">
             <Zap className="w-4 h-4 fill-amber-400 text-amber-400" />
