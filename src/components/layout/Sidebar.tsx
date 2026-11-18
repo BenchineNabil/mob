@@ -10,7 +10,8 @@ import {
   GraduationCap, 
   BarChart3, 
   RotateCcw,
-  Sparkles
+  Sparkles,
+  GitFork
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -26,6 +27,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { to: '/', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/levels', label: 'Level Map', icon: Map },
     { to: '/arena', label: 'Coding Arena', icon: Code2 },
+    { to: '/tree', label: 'Widget Tree Studio', icon: GitFork },
     { to: '/traps', label: 'Professor\'s Traps', icon: AlertTriangle },
     { to: '/exam', label: '90-Min Exam Hall', icon: GraduationCap },
     { to: '/stats', label: 'Performance Stats', icon: BarChart3 },

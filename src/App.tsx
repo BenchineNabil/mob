@@ -12,6 +12,7 @@ import { CodingArenaView } from './views/CodingArenaView';
 import { ExamView } from './views/ExamView';
 import { StatisticsView } from './views/StatisticsView';
 import { TrapCompendiumView } from './views/TrapCompendiumView';
+import { WidgetTreeView } from './views/WidgetTreeView';
 
 export const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -43,6 +44,7 @@ export const App: React.FC = () => {
               <Route path="/levels/:id/boss" element={<BossFightView />} />
               <Route path="/levels/:id/games" element={<GameView />} />
               <Route path="/arena" element={<CodingArenaView />} />
+              <Route path="/tree" element={<WidgetTreeView />} />
               <Route path="/exam" element={<ExamView />} />
               <Route path="/stats" element={<StatisticsView />} />
               <Route path="/traps" element={<TrapCompendiumView />} />
