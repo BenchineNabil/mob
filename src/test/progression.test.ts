@@ -61,6 +61,27 @@ describe('Progression Engine', () => {
     expect(afterBoss.stats.codeChallengesPassed).toBe(1);
   });
 
+  it('allows skipping the boss and marks the boss and level as done while unlocking the next level', () => {
+    const store = useProgressionStore.getState();
+    store.completeLesson(1);
+    store.recordQuizScore(1, 80, 70);
+
+    // Level 2 initially locked
+    expect(useProgressionStore.getState().isLevelUnlocked(2)).toBe(false);
+
+    // Skip Level 1 Boss
+    store.skipBoss(1);
+
+    const afterSkip = useProgressionStore.getState();
+    expect(afterSkip.levels[1].isBossDefeated).toBe(true);
+    expect(afterSkip.levels[1].isLessonsCompleted).toBe(true);
+    expect(afterSkip.levels[1].isQuizPassed).toBe(true);
+    expect(afterSkip.isLevelUnlocked(2)).toBe(true);
+    expect(afterSkip.isLevelUnlocked(3)).toBe(false);
+    expect(afterSkip.stats.completedLevelIds).toContain(1);
+    expect(afterSkip.stats.codeChallengesPassed).toBe(1);
+  });
+
   it('tracks accuracy per topic and overall statistics', () => {
     const store = useProgressionStore.getState();
     store.recordQuestionResult('Operators', true);

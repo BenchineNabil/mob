@@ -229,7 +229,7 @@ export const DashboardView: React.FC = () => {
                 <div className="text-xs font-bold text-white">3. Boss Battle</div>
                 <div className="text-[11px] text-quest-muted">
                   {currentStatus?.isBossDefeated
-                    ? 'Boss Defeated!'
+                    ? 'Done (Defeated)'
                     : currentStatus?.isQuizPassed
                     ? 'Unlocks Next Level'
                     : 'Pass quiz to unlock'}

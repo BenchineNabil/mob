@@ -86,8 +86,8 @@ export const LevelMapView: React.FC = () => {
                   </div>
                 ) : isCompleted ? (
                   <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-semibold border border-emerald-500/30">
-                    <Trophy className="w-3.5 h-3.5" />
-                    <span>Conquered</span>
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Done</span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-semibold border border-indigo-500/30">
@@ -175,8 +175,12 @@ export const LevelMapView: React.FC = () => {
                         : 'opacity-50 pointer-events-none bg-quest-surface text-quest-muted'
                     }`}
                   >
-                    <Trophy className="w-3.5 h-3.5" />
-                    <span>Boss</span>
+                    {status?.isBossDefeated ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : (
+                      <Trophy className="w-3.5 h-3.5" />
+                    )}
+                    <span>{status?.isBossDefeated ? 'Boss (Done)' : 'Boss'}</span>
                   </Link>
                 </div>
               ) : (

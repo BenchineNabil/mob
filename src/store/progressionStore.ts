@@ -12,6 +12,7 @@ interface ProgressionState {
   recordQuizScore: (levelId: number, scorePercent: number, passingThreshold: number) => boolean;
   completeMiniGame: (levelId: number, gameId: string, xpEarned: number) => void;
   defeatBoss: (levelId: number, xpEarned: number) => void;
+  skipBoss: (levelId: number) => void;
   recordQuestionResult: (topic: string, isCorrect: boolean) => void;
   deductHeart: () => void;
   refillHearts: () => void;
@@ -182,6 +183,58 @@ export const useProgressionStore = create<ProgressionState>()(
               totalXp: state.stats.totalXp + xpEarned,
               completedLevelIds,
               codeChallengesPassed: state.stats.codeChallengesPassed + 1,
+            },
+          };
+        });
+      },
+
+      skipBoss: (levelId: number) => {
+        set((state) => {
+          const current = state.levels[levelId];
+          const nextLevelId = levelId + 1;
+          const nextLevel = state.levels[nextLevelId];
+          const completedLevelIds = state.stats.completedLevelIds.includes(levelId)
+            ? state.stats.completedLevelIds
+            : [...state.stats.completedLevelIds, levelId];
+
+          const updatedLevels: Record<number, LevelStatus> = {
+            ...state.levels,
+            [levelId]: {
+              ...(current || {
+                isUnlocked: true,
+                isLessonsCompleted: true,
+                isQuizPassed: true,
+                isBossDefeated: false,
+                completedGames: [],
+              }),
+              isLessonsCompleted: true,
+              isQuizPassed: true,
+              isBossDefeated: true,
+            },
+          };
+
+          if (nextLevelId <= 8) {
+            updatedLevels[nextLevelId] = {
+              ...(nextLevel || {
+                isUnlocked: true,
+                isLessonsCompleted: false,
+                isQuizPassed: false,
+                isBossDefeated: false,
+                completedGames: [],
+              }),
+              isUnlocked: true,
+            };
+          }
+
+          return {
+            levels: updatedLevels,
+            currentLevelId: nextLevelId <= 8 ? nextLevelId : levelId,
+            stats: {
+              ...state.stats,
+              completedLevelIds,
+              codeChallengesPassed: state.stats.completedLevelIds.includes(levelId)
+                ? state.stats.codeChallengesPassed
+                : state.stats.codeChallengesPassed + 1,
             },
           };
         });

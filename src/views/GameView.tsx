@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { LEVELS } from '../data/levels/levelsData';
-import { MINI_GAME_PACKS, MiniGameQuestion } from '../data/miniGamesData';
+import { MINI_GAME_PACKS, MiniGameQuestion, getMiniGameRounds } from '../data/miniGamesData';
 import { useProgressionStore } from '../store/progressionStore';
 import { sound } from '../utils/soundEffects';
 import confetti from 'canvas-confetti';
@@ -38,14 +38,30 @@ export const GameView: React.FC = () => {
   const [currentScore, setCurrentScore] = useState(0);
   const [timerSeconds, setTimerSeconds] = useState(60);
 
-  // Active question pack for choice-based mini-games
-  const currentPack: MiniGameQuestion[] = MINI_GAME_PACKS[activeGame?.id] 
-    || MINI_GAME_PACKS[`game-${levelId}-1`] 
-    || MINI_GAME_PACKS['game-1-1'];
+  // Active question pack for choice-based mini-games (randomized non-repeating rounds)
+  const [activeRounds, setActiveRounds] = useState<MiniGameQuestion[]>(() => 
+    getMiniGameRounds(miniGames[0]?.id || `game-${levelId}-1`, levelId, 5)
+  );
+
+  const currentPack: MiniGameQuestion[] = activeRounds.length > 0
+    ? activeRounds
+    : (MINI_GAME_PACKS[activeGame?.id] || MINI_GAME_PACKS[`game-${levelId}-1`] || MINI_GAME_PACKS['game-1-1']);
 
   const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
   const [userChoice, setUserChoice] = useState<string | null>(null);
   const [isAnswerSubmitted, setIsAnswerSubmitted] = useState<boolean>(false);
+
+  // When selected game changes, load fresh non-repeating rounds
+  useEffect(() => {
+    if (activeGame?.id) {
+      const rounds = getMiniGameRounds(activeGame.id, levelId, 5);
+      setActiveRounds(rounds);
+      setCurrentRoundIndex(0);
+      setUserChoice(null);
+      setIsAnswerSubmitted(false);
+      setGameState('intro');
+    }
+  }, [activeGame?.id, levelId]);
 
   // Tic-Tac-Toe State
   const [tttBoard, setTttBoard] = useState<string[]>(Array(9).fill(''));
@@ -76,6 +92,9 @@ export const GameView: React.FC = () => {
   }, [gameState, timerSeconds, isAnswerSubmitted]);
 
   const handleStartGame = () => {
+    // Generate fresh, randomized rounds each time a game starts so rounds never repeat identically
+    const freshRounds = getMiniGameRounds(activeGame.id, levelId, 5);
+    setActiveRounds(freshRounds);
     setGameState('playing');
     setCurrentScore(0);
     setTimerSeconds(90); // 90 seconds
