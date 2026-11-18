@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { LEVELS } from '../data/levels/levelsData';
+import { MINI_GAME_PACKS, MiniGameQuestion } from '../data/miniGamesData';
 import { useProgressionStore } from '../store/progressionStore';
 import { sound } from '../utils/soundEffects';
 import confetti from 'canvas-confetti';
@@ -14,7 +15,11 @@ import {
   XCircle, 
   Sparkles,
   Zap,
-  Timer
+  Timer,
+  ChevronRight,
+  AlertTriangle,
+  Lightbulb,
+  HelpCircle
 } from 'lucide-react';
 
 export const GameView: React.FC = () => {
@@ -33,8 +38,17 @@ export const GameView: React.FC = () => {
   const [currentScore, setCurrentScore] = useState(0);
   const [timerSeconds, setTimerSeconds] = useState(60);
 
+  // Active question pack for choice-based mini-games
+  const currentPack: MiniGameQuestion[] = MINI_GAME_PACKS[activeGame?.id] 
+    || MINI_GAME_PACKS[`game-${levelId}-1`] 
+    || MINI_GAME_PACKS['game-1-1'];
+
+  const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
+  const [userChoice, setUserChoice] = useState<string | null>(null);
+  const [isAnswerSubmitted, setIsAnswerSubmitted] = useState<boolean>(false);
+
   // Tic-Tac-Toe State
-  const [tttBoard, setTttBoard] = useState<string[]>(ListFilled(9, ''));
+  const [tttBoard, setTttBoard] = useState<string[]>(Array(9).fill(''));
   const [tttTurn, setTttTurn] = useState<'X' | 'O'>('X');
   const [tttWinner, setTttWinner] = useState<string | null>(null);
 
@@ -47,47 +61,30 @@ export const GameView: React.FC = () => {
   ]);
   const [selectedTube, setSelectedTube] = useState<number | null>(null);
 
-  // Event Loop Enigma State
-  const [eventSequence, setEventSequence] = useState<string[]>([]);
-  const targetEventSequence = ['sync1', 'sync2', 'microtask', 'timer'];
-
-  // Type Detective Round
-  const [detectiveRound, setDetectiveRound] = useState(0);
-  const detectiveQuestions = [
-    { code: 'const List<int> a = [1];\na.add(2);', answer: 'runtime_crash', explanation: 'const lists are deeply immutable. add() compiles but throws Unsupported operation at runtime.' },
-    { code: 'int x = 8 / 2;', answer: 'compile_error', explanation: 'Dart / division always returns double. Assigning to int fails compilation.' },
-    { code: 'Student s = Student("Sara");\nprint(s.count);', answer: 'compile_error', explanation: 'Static members cannot be accessed via instance variables in Dart.' },
-    { code: 'late String s;\nprint(s);', answer: 'runtime_crash', explanation: 'Reading late variables before assignment throws LateInitializationError at runtime.' },
-    { code: 'final List<int> b = [1];\nb.add(2);', answer: 'success', explanation: 'final only prevents rebinding the variable; in-place mutation succeeds.' },
-  ];
-
-  function ListFilled<T>(length: number, val: T): T[] {
-    return Array.from({ length }, () => val);
-  }
-
   // Timer countdown when playing
   useEffect(() => {
     let interval: any = null;
-    if (gameState === 'playing' && timerSeconds > 0) {
+    if (gameState === 'playing' && timerSeconds > 0 && !isAnswerSubmitted) {
       interval = setInterval(() => {
         setTimerSeconds((t) => t - 1);
       }, 1000);
-    } else if (timerSeconds === 0 && gameState === 'playing') {
+    } else if (timerSeconds === 0 && gameState === 'playing' && !isAnswerSubmitted) {
       setGameState('lost');
       sound.playError();
     }
     return () => clearInterval(interval);
-  }, [gameState, timerSeconds]);
+  }, [gameState, timerSeconds, isAnswerSubmitted]);
 
   const handleStartGame = () => {
     setGameState('playing');
     setCurrentScore(0);
-    setTimerSeconds(60);
-    setTttBoard(ListFilled(9, ''));
+    setTimerSeconds(90); // 90 seconds
+    setCurrentRoundIndex(0);
+    setUserChoice(null);
+    setIsAnswerSubmitted(false);
+    setTttBoard(Array(9).fill(''));
     setTttTurn('X');
     setTttWinner(null);
-    setDetectiveRound(0);
-    setEventSequence([]);
     sound.playClick();
   };
 
@@ -100,6 +97,36 @@ export const GameView: React.FC = () => {
       spread: 70,
       origin: { y: 0.6 },
     });
+  };
+
+  // Choice-based Game Handler (Type Detective, Layout, Null Safety, Event Loop, etc.)
+  const handleSelectChoice = (choiceKey: string) => {
+    if (isAnswerSubmitted) return; // Prevent multiple clicks
+
+    setUserChoice(choiceKey);
+    setIsAnswerSubmitted(true);
+
+    const currentQuestion = currentPack[currentRoundIndex];
+    const isCorrect = choiceKey === currentQuestion.correctAnswer;
+
+    if (isCorrect) {
+      sound.playSuccess();
+      setCurrentScore((s) => s + 25);
+    } else {
+      sound.playError();
+    }
+  };
+
+  const handleContinueNextRound = () => {
+    sound.playClick();
+    if (currentRoundIndex < currentPack.length - 1) {
+      setCurrentRoundIndex((r) => r + 1);
+      setUserChoice(null);
+      setIsAnswerSubmitted(false);
+    } else {
+      // Completed all rounds in this mini-game pack!
+      handleWinGame();
+    }
   };
 
   // Tic-Tac-Toe Handler
@@ -149,7 +176,6 @@ export const GameView: React.FC = () => {
     } else if (selectedTube === tubeIdx) {
       setSelectedTube(null);
     } else {
-      // Attempt transfer from selectedTube to tubeIdx
       const from = [...tubes[selectedTube]];
       const to = [...tubes[tubeIdx]];
 
@@ -163,7 +189,6 @@ export const GameView: React.FC = () => {
           setTubes(nextTubes);
           setSelectedTube(null);
 
-          // Check win condition
           const isAllUniform = nextTubes.every((t) => t.length === 0 || (t.length === 4 && t.every((c) => c === t[0])));
           if (isAllUniform) {
             handleWinGame();
@@ -179,22 +204,9 @@ export const GameView: React.FC = () => {
     }
   };
 
-  // Detective Handler
-  const handleDetectiveAnswer = (choice: string) => {
-    sound.playClick();
-    const curr = detectiveQuestions[detectiveRound];
-    if (choice === curr.answer) {
-      sound.playSuccess();
-      if (detectiveRound < detectiveQuestions.length - 1) {
-        setDetectiveRound((r) => r + 1);
-        setCurrentScore((s) => s + 20);
-      } else {
-        handleWinGame();
-      }
-    } else {
-      sound.playError();
-    }
-  };
+  const currentQ = currentPack[currentRoundIndex] || currentPack[0];
+  const isCurrentCorrect = userChoice === currentQ?.correctAnswer;
+  const correctOptionObj = currentQ?.options?.find((o) => o.key === currentQ.correctAnswer);
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 animate-fadeIn pb-16">
@@ -228,11 +240,13 @@ export const GameView: React.FC = () => {
               onClick={() => {
                 setSelectedGameId(game.id);
                 setGameState('intro');
+                setUserChoice(null);
+                setIsAnswerSubmitted(false);
                 sound.playClick();
               }}
               className={`p-4 rounded-2xl border text-left transition flex items-center justify-between ${
                 isSelected
-                  ? 'glass-panel-glow border-quest-primary'
+                  ? 'glass-panel-glow border-quest-primary ring-1 ring-quest-primary/40'
                   : 'glass-panel border-quest-border/60 hover:border-quest-border'
               }`}
             >
@@ -269,7 +283,7 @@ export const GameView: React.FC = () => {
                 <span>{timerSeconds}s</span>
               </div>
               <div className="w-px h-4 bg-quest-border" />
-              <div className="text-emerald-400 font-bold">Score: {currentScore}</div>
+              <div className="text-emerald-400 font-bold">Score: {currentScore} XP</div>
             </div>
           )}
         </div>
@@ -302,10 +316,10 @@ export const GameView: React.FC = () => {
 
         {/* Playing View: Dynamic Game Mechanics */}
         {gameState === 'playing' && (
-          <div className="py-4">
+          <div className="py-2">
             
             {/* Mechanic 1: Tic-Tac-Toe Game */}
-            {activeGame.mechanic.includes('tic-tac-toe') || levelId === 6 ? (
+            {activeGame.mechanic.includes('tic-tac-toe') ? (
               <div className="max-w-xs mx-auto space-y-4 text-center">
                 <div className="text-xs font-bold text-white">Current Turn: Player {tttTurn}</div>
                 <div className="grid grid-cols-3 gap-2 aspect-square">
@@ -319,7 +333,11 @@ export const GameView: React.FC = () => {
                     </button>
                   ))}
                 </div>
-                {tttWinner && <div className="text-xs font-bold text-emerald-400">Winner: {tttWinner}!</div>}
+                {tttWinner && (
+                  <div className="p-3 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-bold">
+                    {tttWinner === 'Draw' ? 'Game ended in a draw!' : `Player ${tttWinner} Wins!`}
+                  </div>
+                )}
               </div>
             ) : activeGame.mechanic.includes('water-sort') ? (
               /* Mechanic 2: Water Sort Puzzle */
@@ -346,38 +364,155 @@ export const GameView: React.FC = () => {
                 </div>
               </div>
             ) : (
-              /* Mechanic 3: Type Detective / Code Inspection Challenge */
-              <div className="max-w-xl mx-auto space-y-6">
-                <div className="text-xs text-quest-muted text-center">
-                  Round {detectiveRound + 1} of {detectiveQuestions.length}: Classify this snippet\'s execution outcome!
+              /* Mechanic 3: Interactive Choice & Inspection Challenge (All Other Mini-Games) */
+              <div className="max-w-xl mx-auto space-y-5">
+                
+                {/* Round Progress Indicator */}
+                <div className="flex items-center justify-between text-xs text-quest-muted font-mono">
+                  <span>Round {currentRoundIndex + 1} of {currentPack.length}</span>
+                  <span>{currentRoundIndex + 1}/{currentPack.length} Completed</span>
                 </div>
 
-                <div className="rounded-2xl overflow-hidden border border-quest-border/60 bg-[#0B0F19]">
-                  <pre className="p-4 font-mono text-xs text-emerald-300 overflow-x-auto leading-relaxed">
-                    <code>{detectiveQuestions[detectiveRound].code}</code>
-                  </pre>
+                {/* Question Prompt */}
+                <h3 className="text-sm sm:text-base font-bold text-white leading-relaxed">
+                  {currentQ.prompt}
+                </h3>
+
+                {/* Code Snippet if present */}
+                {currentQ.codeSnippet && (
+                  <div className="rounded-2xl overflow-hidden border border-quest-border/60 bg-[#0B0F19]">
+                    <pre className="p-4 font-mono text-xs sm:text-sm text-emerald-300 overflow-x-auto leading-relaxed whitespace-pre">
+                      <code>{currentQ.codeSnippet}</code>
+                    </pre>
+                  </div>
+                )}
+
+                {/* Interactive Option Buttons */}
+                <div className="space-y-2.5">
+                  {currentQ.options.map((opt) => {
+                    const isChosen = userChoice === opt.key;
+                    const isCorrect = opt.key === currentQ.correctAnswer;
+
+                    // Compute dynamic button styling based on submission state
+                    let btnStyle = 'bg-quest-card/60 border-quest-border/60 hover:bg-quest-border/60 text-white';
+
+                    if (isAnswerSubmitted) {
+                      if (isCorrect) {
+                        // The correct answer is always highlighted in green
+                        btnStyle = 'bg-emerald-500/20 border-emerald-500 text-emerald-200 ring-2 ring-emerald-500/40 font-bold';
+                      } else if (isChosen && !isCorrect) {
+                        // The user's incorrect choice is highlighted in red
+                        btnStyle = 'bg-rose-500/20 border-rose-500 text-rose-200 ring-2 ring-rose-500/40 line-through';
+                      } else {
+                        // Other options dimmed
+                        btnStyle = 'opacity-40 border-quest-border/40 text-quest-muted';
+                      }
+                    }
+
+                    return (
+                      <button
+                        key={opt.key}
+                        onClick={() => handleSelectChoice(opt.key)}
+                        disabled={isAnswerSubmitted}
+                        className={`w-full p-4 rounded-2xl border text-xs sm:text-sm transition flex items-center justify-between text-left ${btnStyle}`}
+                      >
+                        <span className="font-medium">{opt.label}</span>
+
+                        {isAnswerSubmitted && (
+                          <span className="shrink-0 ml-3">
+                            {isCorrect && (
+                              <span className="flex items-center gap-1 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>Correct Answer</span>
+                              </span>
+                            )}
+                            {isChosen && !isCorrect && (
+                              <span className="flex items-center gap-1 text-xs font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/30">
+                                <XCircle className="w-3.5 h-3.5" />
+                                <span>Your Choice</span>
+                              </span>
+                            )}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
-                  <button
-                    onClick={() => handleDetectiveAnswer('compile_error')}
-                    className="p-3.5 rounded-xl border border-quest-border/60 bg-quest-card/50 hover:bg-quest-border text-white text-xs font-bold transition text-center"
-                  >
-                    Compile Error
-                  </button>
-                  <button
-                    onClick={() => handleDetectiveAnswer('runtime_crash')}
-                    className="p-3.5 rounded-xl border border-quest-border/60 bg-quest-card/50 hover:bg-quest-border text-white text-xs font-bold transition text-center"
-                  >
-                    Runtime Crash
-                  </button>
-                  <button
-                    onClick={() => handleDetectiveAnswer('success')}
-                    className="p-3.5 rounded-xl border border-quest-border/60 bg-quest-card/50 hover:bg-quest-border text-white text-xs font-bold transition text-center"
-                  >
-                    Runs Cleanly
-                  </button>
-                </div>
+                {/* Instant Educational Feedback Banner (Shows whether correct or not + why) */}
+                {isAnswerSubmitted && (
+                  <div className={`p-5 rounded-2xl border animate-fadeIn space-y-3 ${
+                    isCurrentCorrect
+                      ? 'bg-emerald-950/40 border-emerald-500/50 shadow-lg shadow-emerald-950/20'
+                      : 'bg-rose-950/40 border-rose-500/50 shadow-lg shadow-rose-950/20'
+                  }`}>
+                    
+                    {/* Status Header */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {isCurrentCorrect ? (
+                          <>
+                            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                            <span className="text-sm font-bold text-emerald-300">
+                              ✓ Correct! Excellent analysis.
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="w-5 h-5 text-rose-400" />
+                            <span className="text-sm font-bold text-rose-300">
+                              ✗ Incorrect Choice
+                            </span>
+                          </>
+                        )}
+                      </div>
+
+                      <span className="text-xs font-mono font-bold text-amber-400">
+                        {isCurrentCorrect ? '+25 XP' : '+0 XP'}
+                      </span>
+                    </div>
+
+                    {/* What is the correct answer */}
+                    {!isCurrentCorrect && correctOptionObj && (
+                      <div className="text-xs font-semibold text-emerald-300 bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20 flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span>The correct answer is: <strong>{correctOptionObj.label}</strong></span>
+                      </div>
+                    )}
+
+                    {/* Detailed Technical Explanation */}
+                    <div className="text-xs text-gray-200 leading-relaxed bg-quest-surface/60 p-3 rounded-xl border border-quest-border/40">
+                      <div className="font-semibold text-quest-primary flex items-center gap-1.5 mb-1">
+                        <Lightbulb className="w-3.5 h-3.5" />
+                        <span>Concept Explanation:</span>
+                      </div>
+                      <p>{currentQ.explanation}</p>
+                    </div>
+
+                    {/* Exam Trap Warning (if present) */}
+                    {currentQ.trapNote && (
+                      <div className="text-xs text-amber-300 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/30 flex items-start gap-2">
+                        <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                        <div>
+                          <strong>Exam Trap Warning:</strong> {currentQ.trapNote}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Advance to Next Round Button */}
+                    <div className="pt-2 flex justify-end">
+                      <button
+                        onClick={handleContinueNextRound}
+                        className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-quest-primary to-quest-secondary hover:from-indigo-600 hover:to-violet-600 text-white shadow-lg shadow-quest-primary/30 transition hover:scale-105"
+                      >
+                        <span>{currentRoundIndex < currentPack.length - 1 ? 'Next Round' : 'Complete Challenge'}</span>
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                  </div>
+                )}
+
               </div>
             )}
 
@@ -419,7 +554,7 @@ export const GameView: React.FC = () => {
             </div>
             <h3 className="text-2xl font-black text-white">Time Expired!</h3>
             <p className="text-xs text-quest-muted">
-              The clock ran out before completing all requirements. Try again to sharpen your speed!
+              The clock ran out before completing all rounds. Try again to sharpen your speed!
             </p>
             <button
               onClick={handleStartGame}
