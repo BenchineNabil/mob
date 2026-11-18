@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useExamStore } from '../store/examStore';
 import { getRandomExamQuestions, ALL_QUESTIONS } from '../data/questions';
 import { MonacoCodeEditor } from '../components/code/MonacoCodeEditor';
-import { ALL_CODING_CHALLENGES } from '../data/codingChallenges';
+import { EXAM_CODING_CHALLENGES } from '../data/codingChallenges';
 import { sound } from '../utils/soundEffects';
 import confetti from 'canvas-confetti';
 import { 
@@ -46,13 +46,8 @@ export const ExamView: React.FC = () => {
   const [activeChallengeIndex, setActiveChallengeIndex] = useState(0);
   const [isExamScratchMode, setIsExamScratchMode] = useState<boolean>(false);
 
-  // 4 Extensive Practical Coding Challenges for the Final Exam
-  const examCodingChallenges = [
-    ALL_CODING_CHALLENGES.find((c) => c.id === 'chal-algo-1') || ALL_CODING_CHALLENGES[0],
-    ALL_CODING_CHALLENGES.find((c) => c.id === 'chal-pat-1') || ALL_CODING_CHALLENGES[2],
-    ALL_CODING_CHALLENGES.find((c) => c.id === 'chal-pat-2') || ALL_CODING_CHALLENGES[4],
-    ALL_CODING_CHALLENGES.find((c) => c.id === 'chal-game-1') || ALL_CODING_CHALLENGES[5],
-  ];
+  // Dedicated Examination Practical Tasks (Completely separate from practice arena labs!)
+  const examCodingChallenges = EXAM_CODING_CHALLENGES;
 
   // Tick timer every second when active
   useEffect(() => {

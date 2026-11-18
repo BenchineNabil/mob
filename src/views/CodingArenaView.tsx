@@ -24,13 +24,14 @@ export const CodingArenaView: React.FC = () => {
   const [showInstructions, setShowInstructions] = useState<boolean>(true);
 
   const categories = [
-    { id: 'all', label: 'All Challenges', icon: Layers },
+    { id: 'all', label: 'All Labs', icon: Layers },
+    { id: 'flutter-widgets', label: 'Flutter Widgets & Layout', icon: Code2 },
+    { id: 'flutter-stateful', label: 'Flutter State & Forms', icon: Flame },
+    { id: 'flutter-async-nav', label: 'Async & Navigation', icon: Sparkles },
     { id: 'scratch', label: 'Code From Zero 🔥', icon: PenTool },
-    { id: 'foundations', label: 'Foundations', icon: Cpu },
-    { id: 'oop', label: 'OOP & Math', icon: Code2 },
-    { id: 'patterns', label: 'Design Patterns', icon: Sparkles },
-    { id: 'advanced', label: 'Advanced State & Engine', icon: Flame },
-    { id: 'sandbox', label: 'Free Scratchpad', icon: Terminal },
+    { id: 'foundations', label: 'Core Dart Revision', icon: Cpu },
+    { id: 'patterns', label: 'Design Patterns', icon: Layers },
+    { id: 'sandbox', label: 'Free Playground', icon: Terminal },
   ];
 
   const filteredChallenges = ALL_CODING_CHALLENGES.filter((c) => {

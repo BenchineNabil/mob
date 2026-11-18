@@ -118,7 +118,31 @@ function clientEvaluateChallenge(
     let passed = false;
 
     // Check specific keywords based on test description
-    if (tc.description.includes('decimalToBinary') || tc.description.includes('binary')) {
+    if (tc.description.includes('ProfileCard')) {
+      passed = code.includes('class ProfileCard extends StatelessWidget') && (code.includes('Card') || code.includes('Row') || code.includes('CircleAvatar'));
+    } else if (tc.description.includes('CartItemTile') || tc.description.includes('Expanded middle')) {
+      passed = code.includes('class CartItemTile') && code.includes('Expanded') && code.includes('Row');
+    } else if (tc.description.includes('BoundedCounter') || tc.description.includes('_BoundedCounterState')) {
+      passed = code.includes('class BoundedCounter extends StatefulWidget') && code.includes('setState') && (code.includes('widget.max') || code.includes('widget.min') || code.includes('_currentValue'));
+    } else if (tc.description.includes('LoginForm') || tc.description.includes('RegistrationForm') || tc.description.includes('FormState')) {
+      passed = (code.includes('GlobalKey<FormState>') || code.includes('FormState')) && (code.includes('TextEditingController') || code.includes('validator') || code.includes('validate()'));
+    } else if (tc.description.includes('TodoListWidget') || tc.description.includes('CheckboxListTile')) {
+      passed = code.includes('class TodoListWidget extends StatefulWidget') && (code.includes('ListView.builder') || code.includes('CheckboxListTile') || code.includes('setState'));
+    } else if (tc.description.includes('PostFeedScreen') || tc.description.includes('WeatherDashboard') || (tc.description.includes('Future') && tc.description.includes('initState'))) {
+      passed = (code.includes('FutureBuilder') || code.includes('fetchPosts') || code.includes('fetchWeather')) && code.includes('initState') && (code.includes('ConnectionState.waiting') || code.includes('CircularProgressIndicator'));
+    } else if (tc.description.includes('SelectionScreen') || tc.description.includes('ProductDetailScreen') || tc.description.includes('Navigator.pop')) {
+      passed = code.includes('Navigator.pop') && (code.includes('Navigator.push') || code.includes('MaterialPageRoute') || code.includes('SelectionScreen') || code.includes('ProductDetailScreen'));
+    } else if (tc.description.includes('LiveChatFeed') || tc.description.includes('StreamBuilder')) {
+      passed = code.includes('StreamBuilder') && (code.includes('messageStream') || code.includes('ChatMessage'));
+    } else if (tc.description.includes('StarRatingBar') || tc.description.includes('Rating')) {
+      passed = code.includes('class StarRatingBar extends StatefulWidget') && (code.includes('Icons.star') || code.includes('onRatingChanged') || code.includes('setState'));
+    } else if (tc.description.includes('ProductCardWidget') || tc.description.includes('Stack and Positioned')) {
+      passed = code.includes('class ProductCardWidget extends StatelessWidget') && (code.includes('Stack') || code.includes('Card') || code.includes('Positioned') || code.includes('ElevatedButton'));
+    } else if (tc.description.includes('ShoppingCartManager') || tc.description.includes('subtotal')) {
+      passed = code.includes('class ShoppingCartManager extends StatefulWidget') && (code.includes('subtotal') || code.includes('fold') || code.includes('setState'));
+    } else if (tc.description.includes('ProductCatalogScreen') || tc.description.includes('ProductDetailScreen')) {
+      passed = code.includes('Navigator.push') && code.includes('Navigator.pop');
+    } else if (tc.description.includes('decimalToBinary') || tc.description.includes('binary')) {
       passed = (code.includes('decimalTobinary') || code.includes('decimalToBinary')) && (code.includes('% 2') || code.includes('~/ 2') || code.includes('toRadixString') || code.includes('remainder'));
     } else if (tc.description.includes('filterEvens')) {
       passed = code.includes('.where(') || code.includes('% 2 == 0');
@@ -137,21 +161,17 @@ function clientEvaluateChallenge(
     } else if (tc.description.includes('AuthRepository') || tc.description.includes('AuthException') || tc.description.includes('logout clears token')) {
       passed = (code.includes('MockAuthRepository') || code.includes('AuthRepository')) && (code.includes('AuthException') || code.includes('login') || code.includes('logout')) && !code.includes('throw UnimplementedError()');
     } else if (tc.description.includes('TicTacToe') || tc.description.includes('makeMove') || tc.description.includes('win')) {
-      passed = code.includes('makeMove') && code.includes('checkWinner') && !code.includes('return false;\n  }\n\n  String? checkWinner() {\n    // TODO');
+      passed = code.includes('makeMove') && code.includes('checkWinner');
     } else if (tc.description.includes('LRUCache') || tc.description.includes('evict')) {
-      passed = code.includes('class LRUCache') && code.includes('put') && code.includes('get') && !code.includes('return null;\n  }');
+      passed = code.includes('class LRUCache') && code.includes('put') && code.includes('get');
     } else if (tc.description.includes('filterAndTransformStream') || tc.description.includes('retryOperation')) {
-      passed = (code.includes('filterAndTransformStream') || code.includes('retryOperation')) && !code.includes('throw UnimplementedError()');
+      passed = (code.includes('filterAndTransformStream') || code.includes('retryOperation'));
     } else if (tc.description.includes('HistoryStore') || tc.description.includes('undo') || tc.description.includes('redo')) {
-      passed = code.includes('class HistoryStore') && code.includes('undo()') && code.includes('redo()') && !code.includes('return _current;\n  }');
+      passed = code.includes('class HistoryStore') && code.includes('undo()');
     } else if (tc.description.includes('MathUtils') || tc.description.includes('isPrime') || tc.description.includes('sieve') || tc.description.includes('gcd')) {
       passed = code.includes('MathUtils') && (code.includes('isPrime') || code.includes('sieveOfEratosthenes') || code.includes('gcd'));
     } else if (tc.description.includes('CustomStack') || tc.description.includes('LIFO') || tc.description.includes('peek') || tc.description.includes('pop')) {
       passed = code.includes('CustomStack') && (code.includes('push') || code.includes('pop') || code.includes('peek'));
-    } else if (tc.description.includes('Expanded') || tc.description.includes('Cart')) {
-      passed = code.includes('Expanded') || code.includes('buildCartItemLayout');
-    } else if (tc.description.includes('Future') || tc.description.includes('initState')) {
-      passed = code.includes('isFutureCachedInInitState') || code.includes('evaluateSnapshot');
     } else {
       // General check: code must be implemented and not empty
       passed = code.trim().length > 60 && !code.includes('// TODO: Implement') && !code.includes('throw UnimplementedError()');

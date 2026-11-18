@@ -7,7 +7,15 @@ export interface TestCase {
 export interface CodingChallenge {
   id: string;
   title: string;
-  category: 'foundations' | 'oop' | 'patterns' | 'advanced' | 'scratch' | 'sandbox';
+  category: 
+    | 'flutter-widgets' 
+    | 'flutter-stateful' 
+    | 'flutter-async-nav' 
+    | 'scratch' 
+    | 'oop' 
+    | 'foundations' 
+    | 'patterns' 
+    | 'sandbox';
   difficulty: 'Beginner' | 'Intermediate' | 'Advanced' | 'Hard';
   description: string;
   instructions: string[];
@@ -16,10 +24,611 @@ export interface CodingChallenge {
   testCases: TestCase[];
 }
 
+// ============================================================================
+// 1. CODING ARENA CHALLENGES (Practice Laboratory)
+// Heavy focus on Flutter Widget creation across every core concept!
+// ============================================================================
+
 export const ALL_CODING_CHALLENGES: CodingChallenge[] = [
+  // --- FLUTTER WIDGETS & LAYOUT ---
+  {
+    id: 'lab-fl-stateless-card',
+    title: 'LAB-FL01: User Profile Card (StatelessWidget)',
+    category: 'flutter-widgets',
+    difficulty: 'Beginner',
+    description: 'Build a reusable, production-ready ProfileCard widget utilizing StatelessWidget, Card, Row, Column, and styling.',
+    instructions: [
+      'Create class ProfileCard extends StatelessWidget.',
+      'Declare immutable fields: final String username, final String role, final String? avatarUrl, and final VoidCallback? onMessageTap.',
+      'Provide a const constructor with required parameters.',
+      'In build(BuildContext context), return a Card with rounded corners and subtle elevation.',
+      'Use a Row containing a CircleAvatar (leading), an Expanded Column with Text widgets (username bold, role muted), and an IconButton (trailing).',
+    ],
+    starterCode: `import 'package:flutter/material.dart';
+
+class ProfileCard extends StatelessWidget {
+  final String username;
+  final String role;
+  final String? avatarUrl;
+  final VoidCallback? onMessageTap;
+
+  const ProfileCard({
+    super.key,
+    required this.username,
+    required this.role,
+    this.avatarUrl,
+    this.onMessageTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: Build and return the Card widget tree
+    // Card -> Padding -> Row -> [CircleAvatar, Expanded(Column([Text, Text])), IconButton]
+    return const Placeholder();
+  }
+}
+
+void main() {
+  const card = ProfileCard(
+    username: "Sara Bouchrika",
+    role: "Mobile Architect",
+  );
+  print("ProfileCard created for: \${card.username}");
+}
+`,
+    zeroScratchCode: `// CODE FROM ZERO: Implement ProfileCard extends StatelessWidget completely from scratch
+// Requirements: final username, role, avatarUrl, onMessageTap. Card with Row, CircleAvatar, Expanded, Column.
+
+import 'package:flutter/material.dart';
+
+void main() {
+
+}
+`,
+    testCases: [
+      { id: 't1', description: 'ProfileCard extends StatelessWidget with const constructor', expectedOutput: true },
+      { id: 't2', description: 'build() returns Card with Row and Expanded Column', expectedOutput: true },
+      { id: 't3', description: 'Leading CircleAvatar and trailing IconButton integrated', expectedOutput: true },
+    ],
+  },
+
+  {
+    id: 'lab-fl-layout-cart',
+    title: 'LAB-FL02: Responsive E-Commerce Cart Item (Row + Expanded)',
+    category: 'flutter-widgets',
+    difficulty: 'Intermediate',
+    description: 'Construct a responsive shopping cart item tile that dynamically adapts to screen widths without RenderFlex overflow.',
+    instructions: [
+      'Create class CartItemTile extends StatelessWidget.',
+      'Accept final String itemName, final double price, final int quantity, and final ValueChanged<int>? onQuantityChanged.',
+      'Use a Row with crossAxisAlignment: CrossAxisAlignment.center.',
+      'Place a fixed 64x64 Container image placeholder on the left.',
+      'Wrap the middle details Column inside an Expanded widget to absorb variable width and prevent text overflow.',
+      'Place a quantity stepper (increment/decrement IconButtons and quantity Text) on the trailing end.',
+    ],
+    starterCode: `import 'package:flutter/material.dart';
+
+class CartItemTile extends StatelessWidget {
+  final String itemName;
+  final double price;
+  final int quantity;
+  final ValueChanged<int>? onQuantityChanged;
+
+  const CartItemTile({
+    super.key,
+    required this.itemName,
+    required this.price,
+    required this.quantity,
+    this.onQuantityChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: Implement Row with Expanded middle Column to prevent RenderFlex overflow
+    return Container();
+  }
+}
+
+void main() {
+  const item = CartItemTile(itemName: "Flutter Book", price: 29.99, quantity: 2);
+  print("Cart item: \${item.itemName} x \${item.quantity}");
+}
+`,
+    zeroScratchCode: `// CODE FROM ZERO: Write CartItemTile extends StatelessWidget from scratch
+// Must wrap middle Column in Expanded to prevent RenderFlex overflow!
+
+import 'package:flutter/material.dart';
+
+void main() {
+
+}
+`,
+    testCases: [
+      { id: 't1', description: 'CartItemTile wraps flexible text Column inside Expanded', expectedOutput: true },
+      { id: 't2', description: 'Implements Row with CrossAxisAlignment.center', expectedOutput: true },
+      { id: 't3', description: 'Includes quantity stepper controls with onQuantityChanged callback', expectedOutput: true },
+    ],
+  },
+
+  // --- STATEFUL WIDGETS & INTERACTIVITY ---
+  {
+    id: 'lab-fl-counter-stateful',
+    title: 'LAB-FL03: Bounded Step Counter (StatefulWidget & setState)',
+    category: 'flutter-stateful',
+    difficulty: 'Intermediate',
+    description: 'Master Flutter State lifecycle, internal state mutation via setState(), and boundary condition guards.',
+    instructions: [
+      'Create class BoundedCounter extends StatefulWidget with final int min, final int max, final int initialValue.',
+      'Create State class _BoundedCounterState extends State<BoundedCounter>.',
+      'Initialize late int _currentValue in initState().',
+      'Implement void _increment() and void _decrement() wrapping state changes inside setState().',
+      'Disable increment when _currentValue >= widget.max, and disable decrement when _currentValue <= widget.min.',
+      'In build(), display the count with dynamic color (green when positive, red when at max/min).',
+    ],
+    starterCode: `import 'package:flutter/material.dart';
+
+class BoundedCounter extends StatefulWidget {
+  final int min;
+  final int max;
+  final int initialValue;
+
+  const BoundedCounter({
+    super.key,
+    this.min = 0,
+    this.max = 10,
+    this.initialValue = 0,
+  });
+
+  @override
+  State<BoundedCounter> createState() => _BoundedCounterState();
+}
+
+class _BoundedCounterState extends State<BoundedCounter> {
+  late int _currentValue;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentValue = widget.initialValue;
+  }
+
+  void _increment() {
+    // TODO: Wrap increment in setState, guard against widget.max
+  }
+
+  void _decrement() {
+    // TODO: Wrap decrement in setState, guard against widget.min
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: Build Row with [-] IconButton, Text(_currentValue), [+] IconButton
+    return Row(
+      children: [
+        IconButton(icon: const Icon(Icons.remove), onPressed: _decrement),
+        Text("$_currentValue"),
+        IconButton(icon: const Icon(Icons.add), onPressed: _increment),
+      ],
+    );
+  }
+}
+`,
+    zeroScratchCode: `// CODE FROM ZERO: Build BoundedCounter extends StatefulWidget from scratch
+// Requirements: createState, initState, setState in _increment and _decrement, min/max guard
+
+import 'package:flutter/material.dart';
+
+void main() {
+
+}
+`,
+    testCases: [
+      { id: 't1', description: 'BoundedCounter creates _BoundedCounterState properly', expectedOutput: true },
+      { id: 't2', description: 'initState initializes _currentValue from widget.initialValue', expectedOutput: true },
+      { id: 't3', description: 'Mutations use setState() and enforce min/max bounds', expectedOutput: true },
+    ],
+  },
+
+  {
+    id: 'lab-fl-form-validation',
+    title: 'LAB-FL04: Form Validation & Controllers (GlobalKey<FormState>)',
+    category: 'flutter-stateful',
+    difficulty: 'Hard',
+    description: 'Implement a secure authentication form with GlobalKey<FormState>, TextEditingController, validators, and dispose cleanup.',
+    instructions: [
+      'Create class LoginForm extends StatefulWidget.',
+      'In State, declare final _formKey = GlobalKey<FormState>().',
+      'Declare late final TextEditingController _emailController and _passwordController.',
+      'Dispose both controllers in dispose() using super.dispose().',
+      'Validate email: must not be empty and must contain "@" and ".".',
+      'Validate password: must not be empty and length >= 6.',
+      'Implement _handleSubmit(): if (_formKey.currentState!.validate()) { ... }',
+    ],
+    starterCode: `import 'package:flutter/material.dart';
+
+class LoginForm extends StatefulWidget {
+  final void Function(String email, String password)? onLoginSuccess;
+  const LoginForm({super.key, this.onLoginSuccess});
+
+  @override
+  State<LoginForm> createState() => _LoginFormState();
+}
+
+class _LoginFormState extends State<LoginForm> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _emailController;
+  late final TextEditingController _passwordController;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    // TODO: Dispose controllers to prevent memory leaks
+    super.dispose();
+  }
+
+  void _handleSubmit() {
+    // TODO: Validate form using _formKey.currentState!.validate()
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          // TODO: TextFormField for email with validator
+          // TODO: TextFormField for password with validator & obscureText: true
+          // TODO: ElevatedButton calling _handleSubmit
+        ],
+      ),
+    );
+  }
+}
+`,
+    zeroScratchCode: `// CODE FROM ZERO: Implement LoginForm with GlobalKey<FormState>, TextEditingControllers,
+// validator rules (email @ and password >= 6), and dispose() cleanup.
+
+import 'package:flutter/material.dart';
+
+void main() {
+
+}
+`,
+    testCases: [
+      { id: 't1', description: 'Form uses GlobalKey<FormState> for validation control', expectedOutput: true },
+      { id: 't2', description: 'TextEditingControllers are instantiated and properly disposed in dispose()', expectedOutput: true },
+      { id: 't3', description: 'Validators verify email format and minimum password length of 6', expectedOutput: true },
+    ],
+  },
+
+  {
+    id: 'lab-fl-dynamic-list',
+    title: 'LAB-FL05: Dynamic Todo List (ListView.builder & Item State)',
+    category: 'flutter-stateful',
+    difficulty: 'Intermediate',
+    description: 'Construct an efficient scrolling list using ListView.builder with dynamic item addition and completion toggling.',
+    instructions: [
+      'Define class TodoItem with final String id, final String title, bool isCompleted.',
+      'Create class TodoListWidget extends StatefulWidget.',
+      'In State, manage List<TodoItem> _todos.',
+      'In build(), use ListView.builder with itemCount: _todos.length.',
+      'Render each item using CheckboxListTile, calling setState() when onChanged fires to toggle isCompleted.',
+    ],
+    starterCode: `import 'package:flutter/material.dart';
+
+class TodoItem {
+  final String id;
+  final String title;
+  bool isCompleted;
+  TodoItem({required this.id, required this.title, this.isCompleted = false});
+}
+
+class TodoListWidget extends StatefulWidget {
+  const TodoListWidget({super.key});
+
+  @override
+  State<TodoListWidget> createState() => _TodoListWidgetState();
+}
+
+class _TodoListWidgetState extends State<TodoListWidget> {
+  final List<TodoItem> _todos = [
+    TodoItem(id: '1', title: 'Study Dart Records'),
+    TodoItem(id: '2', title: 'Master FutureBuilder'),
+  ];
+
+  void _toggleTodo(int index, bool? value) {
+    // TODO: Update item isCompleted inside setState()
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: Return ListView.builder rendering CheckboxListTile for each todo
+    return ListView.builder(
+      itemCount: _todos.length,
+      itemBuilder: (context, index) {
+        return const SizedBox();
+      },
+    );
+  }
+}
+`,
+    zeroScratchCode: `// CODE FROM ZERO: Build TodoListWidget with dynamic ListView.builder and CheckboxListTile
+// Manage List<TodoItem> and toggle completion with setState()
+
+import 'package:flutter/material.dart';
+
+void main() {
+
+}
+`,
+    testCases: [
+      { id: 't1', description: 'Uses ListView.builder for efficient virtualized rendering', expectedOutput: true },
+      { id: 't2', description: 'CheckboxListTile triggers setState to toggle isCompleted', expectedOutput: true },
+    ],
+  },
+
+  // --- ASYNC & NAVIGATION ---
+  {
+    id: 'lab-fl-futurebuilder-feed',
+    title: 'LAB-FL06: Async Feed with FutureBuilder & Caching in initState',
+    category: 'flutter-async-nav',
+    difficulty: 'Hard',
+    description: 'Implement a resilient FutureBuilder screen that avoids Prof. Bouchrika\'s Trap #1 (re-executing Futures on build).',
+    instructions: [
+      'Create class PostFeedScreen extends StatefulWidget.',
+      'Declare late Future<List<String>> _postsFuture in State.',
+      'CRITICAL: Call fetchPosts() in initState() and assign to _postsFuture! NEVER instantiate the Future directly in build()!',
+      'In build(), pass future: _postsFuture to FutureBuilder<List<String>>.',
+      'Handle ConnectionState.waiting -> return Center(child: CircularProgressIndicator()).',
+      'Handle snapshot.hasError -> return Center(child: Text("Error: \${snapshot.error}")).',
+      'Handle snapshot.hasData -> return ListView.builder with ListTiles.',
+    ],
+    starterCode: `import 'package:flutter/material.dart';
+
+Future<List<String>> fetchPosts() async {
+  await Future.delayed(const Duration(milliseconds: 500));
+  return ["Lecture 1: Dart", "Lecture 2: TDD", "Lecture 3: OOP"];
+}
+
+class PostFeedScreen extends StatefulWidget {
+  const PostFeedScreen({super.key});
+
+  @override
+  State<PostFeedScreen> createState() => _PostFeedScreenState();
+}
+
+class _PostFeedScreenState extends State<PostFeedScreen> {
+  // TODO: Declare late Future<List<String>> _postsFuture
+  
+  @override
+  void initState() {
+    super.initState();
+    // TODO: Cache Future in initState to avoid infinite refetches!
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: Implement FutureBuilder handling waiting, error, and data states
+    return const Scaffold();
+  }
+}
+`,
+    zeroScratchCode: `// CODE FROM ZERO: Implement PostFeedScreen with FutureBuilder
+// MUST cache future in initState to avoid re-triggering network on rebuilds!
+
+import 'package:flutter/material.dart';
+
+void main() {
+
+}
+`,
+    testCases: [
+      { id: 't1', description: 'Future is cached in initState to prevent refetch on rebuild (Trap #1)', expectedOutput: true },
+      { id: 't2', description: 'FutureBuilder handles ConnectionState.waiting with CircularProgressIndicator', expectedOutput: true },
+      { id: 't3', description: 'FutureBuilder handles hasError and displays data with ListView.builder', expectedOutput: true },
+    ],
+  },
+
+  {
+    id: 'lab-fl-nav-stack',
+    title: 'LAB-FL07: Two-Screen Navigation with Result Passing (Navigator)',
+    category: 'flutter-async-nav',
+    difficulty: 'Intermediate',
+    description: 'Traverse the Flutter navigation stack with typed result retrieval via Navigator.push and Navigator.pop.',
+    instructions: [
+      'Create class SelectionScreen extends StatelessWidget with a list of color choices.',
+      'When user taps a color, call Navigator.pop(context, selectedColor) to return the selection.',
+      'In HomeScreen, implement Future<void> _pickColor(BuildContext context) async.',
+      'Await Navigator.push(context, MaterialPageRoute(builder: (_) => const SelectionScreen())).',
+      'Store and display the returned result in HomeScreen state via setState().',
+    ],
+    starterCode: `import 'package:flutter/material.dart';
+
+class SelectionScreen extends StatelessWidget {
+  const SelectionScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Select a Color")),
+      body: ListView(
+        children: [
+          ListTile(
+            title: const Text("Electric Blue"),
+            onTap: () {
+              // TODO: Return "Electric Blue" using Navigator.pop
+            },
+          ),
+          ListTile(
+            title: const Text("Neon Violet"),
+            onTap: () {
+              // TODO: Return "Neon Violet" using Navigator.pop
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String _selectedColor = "None";
+
+  Future<void> _navigateAndSelectColor(BuildContext context) async {
+    // TODO: await Navigator.push with MaterialPageRoute, update _selectedColor in setState
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(child: Text("Color: $_selectedColor")),
+    );
+  }
+}
+`,
+    zeroScratchCode: `// CODE FROM ZERO: Implement SelectionScreen and HomeScreen navigation with Navigator.push / pop
+
+import 'package:flutter/material.dart';
+
+void main() {
+
+}
+`,
+    testCases: [
+      { id: 't1', description: 'SelectionScreen passes result back via Navigator.pop(context, result)', expectedOutput: true },
+      { id: 't2', description: 'HomeScreen pushes MaterialPageRoute and awaits returned value', expectedOutput: true },
+    ],
+  },
+
+  {
+    id: 'lab-fl-streambuilder-chat',
+    title: 'LAB-FL08: Real-Time StreamBuilder Live Message Feed',
+    category: 'flutter-async-nav',
+    difficulty: 'Hard',
+    description: 'Build a reactive streaming UI using StreamBuilder that updates instantly as new data events arrive.',
+    instructions: [
+      'Define class ChatMessage with final String sender, final String text.',
+      'Create class LiveChatFeed extends StatelessWidget with final Stream<List<ChatMessage>> messageStream.',
+      'Use StreamBuilder<List<ChatMessage>>(stream: messageStream, builder: ...).',
+      'Handle ConnectionState.waiting -> return Center(child: CircularProgressIndicator()).',
+      'Handle snapshot.hasError -> return Center(child: Text("Stream error")).',
+      'Render incoming messages using ListView.builder.',
+    ],
+    starterCode: `import 'package:flutter/material.dart';
+
+class ChatMessage {
+  final String sender;
+  final String text;
+  ChatMessage(this.sender, this.text);
+}
+
+class LiveChatFeed extends StatelessWidget {
+  final Stream<List<ChatMessage>> messageStream;
+  const LiveChatFeed({super.key, required this.messageStream});
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: Return StreamBuilder<List<ChatMessage>> handling states & rendering ListView
+    return const SizedBox();
+  }
+}
+`,
+    zeroScratchCode: `// CODE FROM ZERO: Build LiveChatFeed with StreamBuilder<List<ChatMessage>> from scratch
+
+import 'package:flutter/material.dart';
+
+void main() {
+
+}
+`,
+    testCases: [
+      { id: 't1', description: 'StreamBuilder listens to messageStream and handles waiting state', expectedOutput: true },
+      { id: 't2', description: 'Renders dynamic incoming message stream using ListView.builder', expectedOutput: true },
+    ],
+  },
+
+  // --- CODE FROM ZERO WIDGET CHALLENGES ---
+  {
+    id: 'lab-fl-scratch-rating',
+    title: '[FROM ZERO] Star Rating Bar Widget (StatefulWidget)',
+    category: 'scratch',
+    difficulty: 'Hard',
+    description: 'Construct a reusable 5-star rating widget completely from zero lines of starter code.',
+    instructions: [
+      'Write class StarRatingBar extends StatefulWidget with final int maxRating, final int initialRating, final ValueChanged<int>? onRatingChanged.',
+      'Create State class _StarRatingBarState.',
+      'In build(), return a Row containing 5 IconButtons (or GestureDetector + Icon).',
+      'Icons before or equal to current rating display Icons.star; icons after display Icons.star_border.',
+      'Tapping any star updates state via setState() and invokes onRatingChanged(newRating).',
+    ],
+    starterCode: `import 'package:flutter/material.dart';
+
+class StarRatingBar extends StatefulWidget {
+  final int maxRating;
+  final int initialRating;
+  final ValueChanged<int>? onRatingChanged;
+
+  const StarRatingBar({
+    super.key,
+    this.maxRating = 5,
+    this.initialRating = 0,
+    this.onRatingChanged,
+  });
+
+  @override
+  State<StarRatingBar> createState() => _StarRatingBarState();
+}
+
+class _StarRatingBarState extends State<StarRatingBar> {
+  late int _rating;
+
+  @override
+  void initState() {
+    super.initState();
+    _rating = widget.initialRating;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Write your interactive Star Rating Row here:
+    return const SizedBox();
+  }
+}
+`,
+    zeroScratchCode: `// WRITE COMPLETELY FROM ZERO:
+// class StarRatingBar extends StatefulWidget
+// Row of stars with tap handler, state mutation, and callback
+
+import 'package:flutter/material.dart';
+
+void main() {
+
+}
+`,
+    testCases: [
+      { id: 't1', description: 'StarRatingBar is a StatefulWidget with maxRating and initialRating', expectedOutput: true },
+      { id: 't2', description: 'Renders interactive Row of Star icons toggling filled/unfilled state', expectedOutput: true },
+      { id: 't3', description: 'Tapping a star triggers setState and onRatingChanged callback', expectedOutput: true },
+    ],
+  },
+
+  // --- CORE DART & OOP REVISION CHALLENGES ---
   {
     id: 'chal-algo-1',
-    title: 'LAB-01: Palindrome & Binary Converter',
+    title: 'LAB-01: Palindrome & Binary Converter (Core Dart)',
     category: 'foundations',
     difficulty: 'Beginner',
     description: 'Implement core string inspection and numeral system conversion in pure Dart.',
@@ -27,9 +636,7 @@ export const ALL_CODING_CHALLENGES: CodingChallenge[] = [
       'Implement bool isPalindrome(String input) - return true if input reads the same forward and backwards (case-insensitive).',
       'Implement String decimalTobinary(int input) - convert any non-negative integer into its binary string representation.',
     ],
-    starterCode: `// LAB-01: Implement the functions below
-
-bool isPalindrome(String input) {
+    starterCode: `bool isPalindrome(String input) {
   // TODO: Implement case-insensitive palindrome checker
   return false;
 }
@@ -44,9 +651,7 @@ void main() {
   print("10 in binary: \${decimalTobinary(10)}");
 }
 `,
-    zeroScratchCode: `// CODE FROM ZERO: Implement both functions completely from scratch
-// bool isPalindrome(String input)
-// String decimalTobinary(int input)
+    zeroScratchCode: `// CODE FROM ZERO: Implement isPalindrome and decimalTobinary from scratch
 
 void main() {
   
@@ -59,61 +664,7 @@ void main() {
       { id: 't4', description: 'decimalTobinary(0) returns "0"', expectedOutput: '0' },
     ],
   },
-  {
-    id: 'chal-oop-1',
-    title: 'LAB-03: Phrase Class Encapsulation & Getters',
-    category: 'oop',
-    difficulty: 'Intermediate',
-    description: 'Construct a robust Dart model class with private fields, named constructors, and custom computed getters.',
-    instructions: [
-      'Encapsulate private field final String _text.',
-      'Provide default constructor Phrase(this._text) and named constructor Phrase.empty() : _text = "".',
-      'Implement getter text returning _text.',
-      'Implement getter isPalindrome returning boolean check.',
-      'Implement getter capitalized returning the text with its first letter uppercase.',
-      'Implement getter vowelCount returning the number of vowels (a, e, i, o, u).',
-    ],
-    starterCode: `class Phrase {
-  final String _text;
 
-  // Constructors
-  Phrase(this._text);
-  Phrase.empty() : _text = "";
-
-  String get text => _text;
-
-  // TODO: Getter isPalindrome
-  bool get isPalindrome => false;
-
-  // TODO: Getter capitalized
-  String get capitalized => "";
-
-  // TODO: Getter vowelCount
-  int get vowelCount => 0;
-
-  @override
-  String toString() => _text;
-}
-
-void main() {
-  final p = Phrase("flutter");
-  print("\${p.text} capitalized: \${p.capitalized}, vowels: \${p.vowelCount}");
-}
-`,
-    zeroScratchCode: `// CODE FROM ZERO: Write the complete Phrase class from line 1
-// Requirements: _text private field, Phrase(this._text), Phrase.empty(),
-// getters: text, isPalindrome, capitalized, vowelCount
-
-void main() {
-
-}
-`,
-    testCases: [
-      { id: 't1', description: 'Phrase("level").isPalindrome returns true', expectedOutput: true },
-      { id: 't2', description: 'Phrase("dart").capitalized returns "Dart"', expectedOutput: 'Dart' },
-      { id: 't3', description: 'Phrase("education").vowelCount returns 5', expectedOutput: 5 },
-    ],
-  },
   {
     id: 'chal-pat-1',
     title: 'LAB-04: CounterStore Singleton Pattern',
@@ -147,7 +698,6 @@ void main() {
 }
 `,
     zeroScratchCode: `// CODE FROM ZERO: Implement the CounterStore Singleton from scratch
-// Private constructor, static instance, factory constructor, increment/reset
 
 void main() {
 
@@ -158,470 +708,26 @@ void main() {
       { id: 't2', description: 'State increment is synchronized across references', expectedOutput: 1 },
     ],
   },
-  {
-    id: 'chal-math-1',
-    title: 'Vector3D Operator Overloading Engine',
-    category: 'oop',
-    difficulty: 'Intermediate',
-    description: 'Build a 3D Vector mathematical engine utilizing Dart operator overloading and getters.',
-    instructions: [
-      'Create immutable class Vector3D with final double x, y, z.',
-      'Overload operator + (Vector3D other) returning new Vector3D.',
-      'Overload operator - (Vector3D other) returning new Vector3D.',
-      'Overload operator * (double scalar) returning new scaled Vector3D.',
-      'Implement double dot(Vector3D other) computing the dot product.',
-      'Implement double get magnitude computing sqrt(x*x + y*y + z*z).',
-    ],
-    starterCode: `import 'dart:math';
 
-class Vector3D {
-  final double x;
-  final double y;
-  final double z;
-
-  const Vector3D(this.x, this.y, this.z);
-
-  // TODO: operator +
-  // TODO: operator -
-  // TODO: operator *
-  // TODO: dot()
-  // TODO: magnitude
-  
-  double get magnitude => 0.0;
-}
-
-void main() {
-  const v1 = Vector3D(1.0, 2.0, 3.0);
-  const v2 = Vector3D(4.0, 5.0, 6.0);
-  print("v1 magnitude: \${v1.magnitude}");
-}
-`,
-    zeroScratchCode: `// CODE FROM ZERO: Build the complete Vector3D mathematical library from scratch
-// Operators: +, -, *, dot product, magnitude
-
-import 'dart:math';
-
-void main() {
-
-}
-`,
-    testCases: [
-      { id: 't1', description: 'Vector3D operator + adds components correctly', expectedOutput: true },
-      { id: 't2', description: 'Vector3D dot product calculates x1*x2 + y1*y2 + z1*z2', expectedOutput: true },
-      { id: 't3', description: 'Vector3D magnitude returns vector Euclidean length', expectedOutput: true },
-    ],
-  },
-  {
-    id: 'chal-pat-2',
-    title: 'Enterprise AuthRepository & Custom Exception',
-    category: 'patterns',
-    difficulty: 'Hard',
-    description: 'Implement a comprehensive repository layer with interface segregation, custom exceptions, and token state.',
-    instructions: [
-      'Define abstract class AuthRepository with methods login, logout, and getters isAuthenticated, currentToken.',
-      'Define custom exception AuthException implements Exception with String message.',
-      'Implement MockAuthRepository implements AuthRepository.',
-      'login throws AuthException if password length < 6.',
-      'login sets currentToken to "token_123" and isAuthenticated = true.',
-      'logout clears token and sets isAuthenticated = false.',
-    ],
-    starterCode: `class AuthException implements Exception {
-  final String message;
-  AuthException(this.message);
-  @override
-  String toString() => "AuthException: $message";
-}
-
-class User {
-  final String id;
-  final String email;
-  User(this.id, this.email);
-}
-
-abstract class AuthRepository {
-  Future<User> login(String email, String password);
-  Future<void> logout();
-  bool get isAuthenticated;
-  String? get currentToken;
-}
-
-class MockAuthRepository implements AuthRepository {
-  String? _token;
-  User? _currentUser;
-
-  @override
-  bool get isAuthenticated => _token != null;
-
-  @override
-  String? get currentToken => _token;
-
-  @override
-  Future<User> login(String email, String password) async {
-    // TODO: Validate password length >= 6, throw AuthException if invalid
-    // Set _token and _currentUser
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> logout() async {
-    // TODO: Clear _token and _currentUser
-  }
-}
-
-void main() async {
-  final repo = MockAuthRepository();
-  print("Authenticated: \${repo.isAuthenticated}");
-}
-`,
-    zeroScratchCode: `// CODE FROM ZERO: Implement AuthException, AuthRepository interface, and MockAuthRepository
-// Must support login, logout, token state, and password length validation
-
-void main() async {
-
-}
-`,
-    testCases: [
-      { id: 't1', description: 'MockAuthRepository implements AuthRepository properly', expectedOutput: true },
-      { id: 't2', description: 'AuthException thrown when password is under 6 characters', expectedOutput: true },
-      { id: 't3', description: 'logout clears token and sets isAuthenticated to false', expectedOutput: false },
-    ],
-  },
-  {
-    id: 'chal-game-1',
-    title: 'Tic-Tac-Toe Game Engine (Full State Machine)',
-    category: 'advanced',
-    difficulty: 'Hard',
-    description: 'Create an authentic 3x3 Tic-Tac-Toe game engine that validates moves, alternates players, and detects wins and draws.',
-    instructions: [
-      'Maintain 3x3 grid List<List<String>> initialized with " " (spaces).',
-      'Track currentPlayer: starts as "X", alternates between "X" and "O".',
-      'Implement bool makeMove(int row, int col): returns false if cell occupied or out of bounds.',
-      'Implement String? checkWinner(): checks all 3 rows, 3 columns, and 2 diagonals. Returns "X", "O", or null.',
-      'Implement bool isBoardFull(): returns true if no empty spaces remain.',
-      'Implement bool get isGameOver: returns true if winner exists or board is full.',
-      'Implement void resetBoard(): clears board and sets currentPlayer back to "X".',
-    ],
-    starterCode: `class TicTacToeEngine {
-  late List<List<String>> board;
-  String currentPlayer = 'X';
-  String? winner;
-
-  TicTacToeEngine() {
-    resetBoard();
-  }
-
-  void resetBoard() {
-    board = List.generate(3, (_) => List.filled(3, ' '));
-    currentPlayer = 'X';
-    winner = null;
-  }
-
-  bool makeMove(int row, int col) {
-    // TODO: Validate coordinates (0..2), ensure cell is ' '
-    // Place current player symbol, check winner, alternate currentPlayer
-    return false;
-  }
-
-  String? checkWinner() {
-    // TODO: Check 3 rows, 3 cols, and 2 diagonals
-    return null;
-  }
-
-  bool isBoardFull() {
-    // TODO: Return true if no ' ' remains
-    return false;
-  }
-
-  bool get isGameOver => winner != null || isBoardFull();
-}
-
-void main() {
-  final game = TicTacToeEngine();
-  game.makeMove(0, 0); // X
-  game.makeMove(1, 0); // O
-  game.makeMove(0, 1); // X
-  game.makeMove(1, 1); // O
-  game.makeMove(0, 2); // X wins!
-  print("Winner: \${game.winner}");
-}
-`,
-    zeroScratchCode: `// CODE FROM ZERO: Build the complete TicTacToeEngine class from scratch
-// Must implement makeMove(row, col), checkWinner(), isBoardFull(), resetBoard()
-
-void main() {
-
-}
-`,
-    testCases: [
-      { id: 't1', description: 'TicTacToeEngine detects horizontal row win', expectedOutput: 'X' },
-      { id: 't2', description: 'TicTacToeEngine detects diagonal win', expectedOutput: 'O' },
-      { id: 't3', description: 'makeMove rejects occupied cells and invalid coordinates', expectedOutput: false },
-    ],
-  },
-  {
-    id: 'chal-data-1',
-    title: 'Generic LRU Cache with Eviction Policy',
-    category: 'advanced',
-    difficulty: 'Hard',
-    description: 'Implement a high-performance Generic Least Recently Used (LRU) Cache data structure.',
-    instructions: [
-      'Create class LRUCache<K, V> with constructor LRUCache(this.capacity).',
-      'Implement V? get(K key): returns cached value and marks key as most recently used.',
-      'Implement void put(K key, V value): inserts or updates key-value pair. If capacity exceeded, evicts least recently used entry.',
-      'Implement int get size returning current count of items.',
-      'Implement void clear() resetting the cache.',
-    ],
-    starterCode: `class LRUCache<K, V> {
-  final int capacity;
-  final Map<K, V> _cache = {};
-
-  LRUCache(this.capacity) {
-    if (capacity <= 0) throw ArgumentError("Capacity must be > 0");
-  }
-
-  V? get(K key) {
-    // TODO: Return value if present and refresh key to most-recently-used
-    return null;
-  }
-
-  void put(K key, V value) {
-    // TODO: Insert/update. If size exceeds capacity, evict oldest entry
-  }
-
-  int get size => _cache.length;
-  void clear() => _cache.clear();
-}
-
-void main() {
-  final cache = LRUCache<String, int>(2);
-  cache.put("a", 1);
-  cache.put("b", 2);
-  cache.get("a"); // "a" is now most recent
-  cache.put("c", 3); // "b" should be evicted
-  print("a in cache: \${cache.get('a')}, b in cache: \${cache.get('b')}");
-}
-`,
-    zeroScratchCode: `// CODE FROM ZERO: Implement Generic LRUCache<K, V> completely from scratch
-// Must support capacity, get(K), put(K, V), and automatic LRU eviction
-
-void main() {
-
-}
-`,
-    testCases: [
-      { id: 't1', description: 'LRUCache stores and retrieves elements by key', expectedOutput: true },
-      { id: 't2', description: 'LRUCache evicts oldest accessed item when capacity is exceeded', expectedOutput: true },
-      { id: 't3', description: 'get(key) refreshes access order to prevent premature eviction', expectedOutput: true },
-    ],
-  },
-  {
-    id: 'chal-async-1',
-    title: 'Async Stream Sieve & Exponential Retry Fetcher',
-    category: 'advanced',
-    difficulty: 'Hard',
-    description: 'Master Dart asynchronous streams, stream transformers, and fault-tolerant retry mechanisms.',
-    instructions: [
-      'Implement Stream<int> filterAndTransformStream(Stream<int> stream): filter only positive even numbers and yield their squares.',
-      'Implement Future<T> retryOperation<T>(Future<T> Function() action, int maxAttempts): retry action on failure up to maxAttempts.',
-    ],
-    starterCode: `import 'dart:async';
-
-Stream<int> filterAndTransformStream(Stream<int> stream) async* {
-  // TODO: Yield squared value for each positive even integer
-  // Ignore odd numbers and non-positive numbers
-}
-
-Future<T> retryOperation<T>(Future<T> Function() action, int maxAttempts) async {
-  // TODO: Execute action. If it throws, retry until maxAttempts is reached.
-  // Re-throw last exception if all attempts fail.
-  throw UnimplementedError();
-}
-
-void main() async {
-  final stream = Stream.fromIterable([1, 2, 3, 4, -2, 6]);
-  await for (var val in filterAndTransformStream(stream)) {
-    print("Transformed: $val");
-  }
-}
-`,
-    zeroScratchCode: `// CODE FROM ZERO: Implement async* stream processor and retryOperation from scratch
-
-import 'dart:async';
-
-void main() async {
-
-}
-`,
-    testCases: [
-      { id: 't1', description: 'filterAndTransformStream filters evens and yields squares', expectedOutput: true },
-      { id: 't2', description: 'retryOperation succeeds on retry after initial failure', expectedOutput: true },
-    ],
-  },
-  {
-    id: 'chal-state-1',
-    title: 'Stateful Undo/Redo History Store Stack',
-    category: 'advanced',
-    difficulty: 'Hard',
-    description: 'Implement an immutable state management history store with bidirectional undo and redo navigation.',
-    instructions: [
-      'Create class HistoryStore<T> with constructor HistoryStore(T initial).',
-      'Implement void execute(T nextState): pushes to undo stack and clears redo stack.',
-      'Implement bool get canUndo and bool get canRedo.',
-      'Implement T undo(): moves current state to redo stack, returns previous state.',
-      'Implement T redo(): moves redo state back to current state.',
-      'Implement T get currentState.',
-    ],
-    starterCode: `class HistoryStore<T> {
-  T _current;
-  final List<T> _undoStack = [];
-  final List<T> _redoStack = [];
-
-  HistoryStore(this._current);
-
-  T get currentState => _current;
-  bool get canUndo => _undoStack.isNotEmpty;
-  bool get canRedo => _redoStack.isNotEmpty;
-
-  void execute(T nextState) {
-    // TODO: Push current to undoStack, set _current = nextState, clear redoStack
-  }
-
-  T undo() {
-    // TODO: Pop from undoStack, push current to redoStack, update _current
-    return _current;
-  }
-
-  T redo() {
-    // TODO: Pop from redoStack, push current to undoStack, update _current
-    return _current;
-  }
-}
-
-void main() {
-  final history = HistoryStore<String>("Page 1");
-  history.execute("Page 2");
-  history.execute("Page 3");
-  print("Current: \${history.currentState}");
-  history.undo();
-  print("After undo: \${history.currentState}");
-}
-`,
-    zeroScratchCode: `// CODE FROM ZERO: Implement HistoryStore<T> from scratch with full undo/redo stack
-
-void main() {
-
-}
-`,
-    testCases: [
-      { id: 't1', description: 'HistoryStore executes and tracks currentState updates', expectedOutput: true },
-      { id: 't2', description: 'HistoryStore correctly undoes to previous state', expectedOutput: true },
-      { id: 't3', description: 'HistoryStore redos previously undone states', expectedOutput: true },
-    ],
-  },
-  {
-    id: 'chal-scratch-1',
-    title: '[FROM ZERO] Prime Sieve & Math Utilities',
-    category: 'scratch',
-    difficulty: 'Hard',
-    description: 'Write an entire mathematical utility class from zero lines of starter code.',
-    instructions: [
-      'Write class MathUtils from scratch.',
-      'Add static bool isPrime(int n): returns true if n is prime (n >= 2).',
-      'Add static List<int> sieveOfEratosthenes(int max): returns all primes <= max.',
-      'Add static int gcd(int a, int b): computes greatest common divisor via Euclidean algorithm.',
-    ],
-    starterCode: `// Blank canvas: Write class MathUtils completely from scratch
-// Static methods required:
-// - static bool isPrime(int n)
-// - static List<int> sieveOfEratosthenes(int max)
-// - static int gcd(int a, int b)
-
-class MathUtils {
-  // Write your code here:
-}
-
-void main() {
-  print("Is 17 prime? \${MathUtils.isPrime(17)}");
-  print("Primes up to 20: \${MathUtils.sieveOfEratosthenes(20)}");
-  print("GCD(48, 18): \${MathUtils.gcd(48, 18)}");
-}
-`,
-    zeroScratchCode: `// WRITE COMPLETELY FROM SCRATCH (NO SCAFFOLDING):
-// class MathUtils with isPrime, sieveOfEratosthenes, and gcd
-
-void main() {
-
-}
-`,
-    testCases: [
-      { id: 't1', description: 'MathUtils.isPrime(17) returns true and isPrime(4) returns false', expectedOutput: true },
-      { id: 't2', description: 'MathUtils.sieveOfEratosthenes(10) returns [2, 3, 5, 7]', expectedOutput: true },
-      { id: 't3', description: 'MathUtils.gcd(48, 18) returns 6', expectedOutput: 6 },
-    ],
-  },
-  {
-    id: 'chal-scratch-2',
-    title: '[FROM ZERO] Custom Generic Stack Data Structure',
-    category: 'scratch',
-    difficulty: 'Hard',
-    description: 'Construct a Generic Stack<T> collection entirely from scratch with boundary safety checks.',
-    instructions: [
-      'Implement class CustomStack<T>.',
-      'Implement void push(T item).',
-      'Implement T pop(): throws StateError if stack is empty.',
-      'Implement T peek(): returns top element without removing, throws StateError if empty.',
-      'Implement bool get isEmpty and int get size.',
-    ],
-    starterCode: `// Blank canvas: Implement CustomStack<T> completely from scratch
-// Methods required: push(item), pop(), peek(), isEmpty, size
-
-class CustomStack<T> {
-  // Write your code here
-}
-
-void main() {
-  final s = CustomStack<int>();
-  s.push(10);
-  s.push(20);
-  print("Top: \${s.peek()}, popped: \${s.pop()}");
-}
-`,
-    zeroScratchCode: `// WRITE COMPLETELY FROM ZERO:
-// class CustomStack<T> with push, pop, peek, isEmpty, size
-
-void main() {
-
-}
-`,
-    testCases: [
-      { id: 't1', description: 'CustomStack pushes and pops elements in LIFO order', expectedOutput: true },
-      { id: 't2', description: 'CustomStack peek returns top without removing', expectedOutput: true },
-      { id: 't3', description: 'CustomStack pop on empty stack throws StateError', expectedOutput: true },
-    ],
-  },
   {
     id: 'chal-sandbox',
-    title: 'Freeform Pure Dart 3 Sandbox',
+    title: 'Freeform Pure Dart & Flutter Sandbox',
     category: 'sandbox',
     difficulty: 'Beginner',
-    description: 'Freeform scratchpad to write and test arbitrary Dart 3 algorithms, async code, records, and patterns.',
+    description: 'Freeform scratchpad to write and test arbitrary Dart 3 and Flutter widget structures.',
     instructions: [
-      'Write any valid Dart 3 code.',
+      'Write any valid Dart 3 or Flutter code.',
       'Use the Run button to execute and inspect the console output.',
     ],
     starterCode: `import 'dart:async';
 
 void main() async {
-  print("🚀 Welcome to the ENSIA Dart Coding Sandbox!");
+  print("🚀 Welcome to the ENSIA Flutter & Dart Coding Sandbox!");
   
   // Test Event Loop queue priority:
   scheduleMicrotask(() => print("1. Microtask executed"));
   Future(() => print("2. Event queue Future executed"));
   print("3. Synchronous main completed");
-  
-  // Dart 3 Record pattern test:
-  var (name, score) = ("Bouchrika Beater", 100);
-  print("Record: $name reached $score% accuracy");
 }
 `,
     zeroScratchCode: `void main() {
@@ -629,5 +735,387 @@ void main() async {
 }
 `,
     testCases: [],
+  },
+];
+
+
+// ============================================================================
+// 2. EXAM CODING CHALLENGES (Dedicated Final Exam Practical Tasks)
+// COMPLETELY DIFFERENT FROM CODING ARENA LABS!
+// Rigorous examination tasks evaluating end-to-end Flutter widget construction.
+// ============================================================================
+
+export const EXAM_CODING_CHALLENGES: CodingChallenge[] = [
+  {
+    id: 'exam-fl-1',
+    title: 'Exam Task 1: Responsive Product Card with Stack & Badge (StatelessWidget)',
+    category: 'flutter-widgets',
+    difficulty: 'Intermediate',
+    description: 'Construct a complete ProductCardWidget utilizing Stack, Positioned discount badge, Card, Column, and price formatting.',
+    instructions: [
+      'Create class ProductCardWidget extends StatelessWidget.',
+      'Fields: final String title, final double price, final double? discountPercent, final String imageUrl, final VoidCallback onAddToCart.',
+      'Use a Card with rounded corners (BorderRadius.circular(16)).',
+      'Use a Stack to display a top image container and a Positioned top-right discount badge (if discountPercent != null).',
+      'Below image, render title with maxLines: 2 and TextOverflow.ellipsis.',
+      'Display price formatted as "\\$29.99" and an ElevatedButton labeled "Add to Cart".',
+    ],
+    starterCode: `import 'package:flutter/material.dart';
+
+class ProductCardWidget extends StatelessWidget {
+  final String title;
+  final double price;
+  final double? discountPercent;
+  final String imageUrl;
+  final VoidCallback onAddToCart;
+
+  const ProductCardWidget({
+    super.key,
+    required this.title,
+    required this.price,
+    this.discountPercent,
+    required this.imageUrl,
+    required this.onAddToCart,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: Build ProductCard with Stack, Positioned badge, Text, and ElevatedButton
+    return const Card();
+  }
+}
+
+void main() {
+  final product = ProductCardWidget(
+    title: "Flutter in Action",
+    price: 39.99,
+    discountPercent: 15.0,
+    imageUrl: "https://example.com/flutter.png",
+    onAddToCart: () => print("Added!"),
+  );
+  print("Exam Task 1: ProductCard created for \${product.title}");
+}
+`,
+    zeroScratchCode: `// EXAM FROM ZERO: Write ProductCardWidget extends StatelessWidget from scratch
+// Must use Stack, Positioned discount badge, Card, Column, formatted price, and ElevatedButton.
+
+import 'package:flutter/material.dart';
+
+void main() {
+
+}
+`,
+    testCases: [
+      { id: 't1', description: 'ProductCardWidget uses Stack and Positioned for discount badge layout', expectedOutput: true },
+      { id: 't2', description: 'Uses Card with rounded border and Text with TextOverflow.ellipsis', expectedOutput: true },
+      { id: 't3', description: 'Integrates ElevatedButton triggering onAddToCart callback', expectedOutput: true },
+    ],
+  },
+
+  {
+    id: 'exam-fl-2',
+    title: 'Exam Task 2: Robust User Registration Form (StatefulWidget & FormState)',
+    category: 'flutter-stateful',
+    difficulty: 'Hard',
+    description: 'Implement a production-grade registration screen with GlobalKey<FormState>, password match validation, and controller disposal.',
+    instructions: [
+      'Create class RegistrationForm extends StatefulWidget.',
+      'Declare final _formKey = GlobalKey<FormState>().',
+      'Declare TextEditingController for email, password, and confirmPassword.',
+      'Dispose all three controllers in dispose() to prevent memory leaks.',
+      'Validator for email: must contain "@" and ".".',
+      'Validator for password: length >= 8 and at least one digit.',
+      'Validator for confirmPassword: must match passwordController.text.',
+      'Submit button triggers _formKey.currentState!.validate().',
+    ],
+    starterCode: `import 'package:flutter/material.dart';
+
+class RegistrationForm extends StatefulWidget {
+  final void Function(String email, String password)? onRegister;
+  const RegistrationForm({super.key, this.onRegister});
+
+  @override
+  State<RegistrationForm> createState() => _RegistrationFormState();
+}
+
+class _RegistrationFormState extends State<RegistrationForm> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _emailController;
+  late final TextEditingController _passwordController;
+  late final TextEditingController _confirmPasswordController;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
+    _confirmPasswordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    // TODO: Dispose all controllers properly
+    super.dispose();
+  }
+
+  void _submit() {
+    // TODO: Validate with _formKey and call onRegister
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          // TODO: Email TextFormField
+          // TODO: Password TextFormField (obscureText)
+          // TODO: Confirm Password TextFormField (must match password)
+          // TODO: ElevatedButton
+        ],
+      ),
+    );
+  }
+}
+`,
+    zeroScratchCode: `// EXAM FROM ZERO: Implement complete RegistrationForm with FormState, 3 controllers,
+// password match validation, and dispose() cleanup.
+
+import 'package:flutter/material.dart';
+
+void main() {
+
+}
+`,
+    testCases: [
+      { id: 't1', description: 'RegistrationForm uses GlobalKey<FormState> for validation', expectedOutput: true },
+      { id: 't2', description: 'Controllers for email, password, and confirmPassword disposed in dispose()', expectedOutput: true },
+      { id: 't3', description: 'Confirm password validator validates equality with primary password', expectedOutput: true },
+    ],
+  },
+
+  {
+    id: 'exam-fl-3',
+    title: 'Exam Task 3: Weather Dashboard with Safe FutureBuilder (Caching in initState)',
+    category: 'flutter-async-nav',
+    difficulty: 'Hard',
+    description: 'Implement an asynchronous weather dashboard screen that avoids refetching data on widget rebuilds (Bouchrika Trap #1).',
+    instructions: [
+      'Create class WeatherDashboard extends StatefulWidget with final String city.',
+      'Define model class WeatherData with final String city, final double temperature, final String condition.',
+      'In State, declare late Future<WeatherData> _weatherFuture.',
+      'Initialize _weatherFuture in initState() calling fetchWeather(widget.city). NEVER in build()!',
+      'In build(), render FutureBuilder<WeatherData>.',
+      'When ConnectionState.waiting, display CircularProgressIndicator.',
+      'When hasError, display an Error icon with retry button resetting _weatherFuture in setState().',
+      'When hasData, display the weather card with temperature and condition.',
+    ],
+    starterCode: `import 'package:flutter/material.dart';
+
+class WeatherData {
+  final String city;
+  final double temperature;
+  final String condition;
+  WeatherData({required this.city, required this.temperature, required this.condition});
+}
+
+Future<WeatherData> fetchWeather(String city) async {
+  await Future.delayed(const Duration(milliseconds: 300));
+  return WeatherData(city: city, temperature: 24.5, condition: "Sunny");
+}
+
+class WeatherDashboard extends StatefulWidget {
+  final String city;
+  const WeatherDashboard({super.key, required this.city});
+
+  @override
+  State<WeatherDashboard> createState() => _WeatherDashboardState();
+}
+
+class _WeatherDashboardState extends State<WeatherDashboard> {
+  // TODO: Declare late Future<WeatherData> _weatherFuture
+
+  @override
+  void initState() {
+    super.initState();
+    // TODO: Cache Future in initState! (Trap #1 prevention)
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: Implement FutureBuilder handling waiting, error, and data states
+    return const Scaffold();
+  }
+}
+`,
+    zeroScratchCode: `// EXAM FROM ZERO: Implement WeatherDashboard with FutureBuilder
+// MUST cache future in initState to avoid infinite network loops on rebuild!
+
+import 'package:flutter/material.dart';
+
+void main() {
+
+}
+`,
+    testCases: [
+      { id: 't1', description: 'Future is cached in initState to prevent rebuild refetching (Trap #1)', expectedOutput: true },
+      { id: 't2', description: 'FutureBuilder handles waiting state with CircularProgressIndicator', expectedOutput: true },
+      { id: 't3', description: 'FutureBuilder renders WeatherData on success and error UI on failure', expectedOutput: true },
+    ],
+  },
+
+  {
+    id: 'exam-fl-4',
+    title: 'Exam Task 4: Interactive Shopping Cart State Manager (StatefulWidget & Subtotal)',
+    category: 'flutter-stateful',
+    difficulty: 'Hard',
+    description: 'Implement a comprehensive shopping cart state manager that recalculates subtotals, manages item quantities, and removes items at zero.',
+    instructions: [
+      'Create class ShoppingCartManager extends StatefulWidget.',
+      'Manage List<CartLineItem> _items with final String id, final String name, final double price, int quantity.',
+      'Implement double get subtotal => _items.fold(0.0, (sum, item) => sum + (item.price * item.quantity)).',
+      'Implement void _incrementItem(String id) and void _decrementItem(String id) inside setState().',
+      'When quantity drops to 0, automatically remove item from _items.',
+      'Render items using ListView.builder and display sticky bottom summary bar with formatted subtotal.',
+    ],
+    starterCode: `import 'package:flutter/material.dart';
+
+class CartLineItem {
+  final String id;
+  final String name;
+  final double price;
+  int quantity;
+  CartLineItem({required this.id, required this.name, required this.price, this.quantity = 1});
+}
+
+class ShoppingCartManager extends StatefulWidget {
+  const ShoppingCartManager({super.key});
+
+  @override
+  State<ShoppingCartManager> createState() => _ShoppingCartManagerState();
+}
+
+class _ShoppingCartManagerState extends State<ShoppingCartManager> {
+  final List<CartLineItem> _items = [
+    CartLineItem(id: '1', name: 'Flutter Hoodie', price: 49.99, quantity: 1),
+    CartLineItem(id: '2', name: 'Dart Mug', price: 14.99, quantity: 2),
+  ];
+
+  double get subtotal => _items.fold(0.0, (sum, item) => sum + (item.price * item.quantity));
+
+  void _increment(String id) {
+    // TODO: Increment item quantity inside setState()
+  }
+
+  void _decrement(String id) {
+    // TODO: Decrement item quantity inside setState(), remove if quantity <= 0
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: Build Scaffold with ListView of cart items and bottom subtotal bar
+    return const Scaffold();
+  }
+}
+`,
+    zeroScratchCode: `// EXAM FROM ZERO: Implement ShoppingCartManager StatefulWidget completely from scratch
+// Must calculate subtotal, increment/decrement quantities, and auto-remove at zero.
+
+import 'package:flutter/material.dart';
+
+void main() {
+
+}
+`,
+    testCases: [
+      { id: 't1', description: 'ShoppingCartManager dynamically computes subtotal using fold()', expectedOutput: true },
+      { id: 't2', description: 'Increment and decrement updates quantities inside setState()', expectedOutput: true },
+      { id: 't3', description: 'Removes line items when quantity reaches 0', expectedOutput: true },
+    ],
+  },
+
+  {
+    id: 'exam-fl-5',
+    title: 'Exam Task 5: Master-Detail Catalog Navigation with Result Passing (Navigator)',
+    category: 'flutter-async-nav',
+    difficulty: 'Intermediate',
+    description: 'Construct a two-screen product catalog flow utilizing Navigator.push, typed Route arguments, and returning modified state.',
+    instructions: [
+      'Create class ProductDetailScreen extends StatelessWidget with final String productId, final bool isFavorite.',
+      'Include a Favorite toggle button calling Navigator.pop(context, !isFavorite) to return updated favorite status.',
+      'In ProductCatalogScreen, tapping any catalog item calls await Navigator.push(context, MaterialPageRoute(...)).',
+      'Upon receiving the returned boolean result, update the catalog item favorite state in setState().',
+    ],
+    starterCode: `import 'package:flutter/material.dart';
+
+class ProductDetailScreen extends StatelessWidget {
+  final String productId;
+  final bool isFavorite;
+
+  const ProductDetailScreen({
+    super.key,
+    required this.productId,
+    required this.isFavorite,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Product $productId")),
+      body: Center(
+        child: ElevatedButton.icon(
+          icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
+          label: Text(isFavorite ? "Remove Favorite" : "Add to Favorites"),
+          onPressed: () {
+            // TODO: Return updated favorite boolean (!isFavorite) via Navigator.pop
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class ProductCatalogScreen extends StatefulWidget {
+  const ProductCatalogScreen({super.key});
+
+  @override
+  State<ProductCatalogScreen> createState() => _ProductCatalogScreenState();
+}
+
+class _ProductCatalogScreenState extends State<ProductCatalogScreen> {
+  bool _isFavorite = false;
+
+  Future<void> _openDetail(BuildContext context) async {
+    // TODO: Push ProductDetailScreen with MaterialPageRoute and await result
+    // Update _isFavorite in setState if returned result is not null
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: ListTile(
+          title: const Text("Flutter Dev Guide"),
+          trailing: Icon(_isFavorite ? Icons.favorite : Icons.favorite_border),
+          onTap: () => _openDetail(context),
+        ),
+      ),
+    );
+  }
+}
+`,
+    zeroScratchCode: `// EXAM FROM ZERO: Implement ProductDetailScreen and ProductCatalogScreen navigation
+// Must return updated favorite boolean via Navigator.pop and await in parent.
+
+import 'package:flutter/material.dart';
+
+void main() {
+
+}
+`,
+    testCases: [
+      { id: 't1', description: 'ProductDetailScreen returns updated favorite boolean via Navigator.pop', expectedOutput: true },
+      { id: 't2', description: 'ProductCatalogScreen awaits push result and updates state with setState', expectedOutput: true },
+    ],
   },
 ];
